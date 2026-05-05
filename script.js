@@ -102,6 +102,7 @@ const STORAGE_KEYS = {
     bump: 'ifoodbag.bump',
     leadSession: 'ifoodbag.leadSession',
     utm: 'ifoodbag.utm',
+    utmSession: 'ifoodbag.utm.session',
     pixelConfig: 'ifoodbag.pixelConfig',
     tiktokPixelConfig: 'ifoodbag.tiktokPixelConfig',
     coupon: 'ifoodbag.coupon',
@@ -161,6 +162,8 @@ const state = {
     siteConfig: null,
     siteConfigAt: 0,
     metaRuntimeEventIds: {},
+    utmFallback: null,
+    leadSessionFallback: '',
     toastTimeout: null,
     pixCreatePromise: null,
     pixCreateKey: '',
@@ -8292,11 +8295,18 @@ function loadPix() {
 }
 
 function getLeadSessionId() {
-    let sessionId = localStorage.getItem(STORAGE_KEYS.leadSession) || '';
+    let sessionId = safeStorageGet(localStorage, STORAGE_KEYS.leadSession) ||
+        safeStorageGet(sessionStorage, STORAGE_KEYS.leadSession) ||
+        readCookie(STORAGE_KEYS.leadSession) ||
+        state.leadSessionFallback ||
+        '';
     if (sessionId) return sessionId;
 
     sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    localStorage.setItem(STORAGE_KEYS.leadSession, sessionId);
+    state.leadSessionFallback = sessionId;
+    safeStorageSet(localStorage, STORAGE_KEYS.leadSession, sessionId);
+    safeStorageSet(sessionStorage, STORAGE_KEYS.leadSession, sessionId);
+    writeCookie(STORAGE_KEYS.leadSession, sessionId, 7);
     return sessionId;
 }
 
@@ -8350,6 +8360,12 @@ async function ensureApiSession(force = false) {
 const TRACKING_QUERY_KEYS = [
     'src',
     'sck',
+    'campaign',
+    'campaign_id',
+    'adset',
+    'adset_id',
+    'ad_id',
+    'placement',
     'utm_source',
     'utm_medium',
     'utm_campaign',
@@ -8360,6 +8376,56 @@ const TRACKING_QUERY_KEYS = [
     'ttclid',
     'ad_platform'
 ];
+
+function safeStorageGet(storage, key) {
+    try {
+        return storage?.getItem(key) || '';
+    } catch (_error) {
+        return '';
+    }
+}
+
+function safeStorageSet(storage, key, value) {
+    try {
+        storage?.setItem(key, value);
+        return true;
+    } catch (_error) {
+        return false;
+    }
+}
+
+function readCookie(name) {
+    try {
+        const prefix = `${encodeURIComponent(name)}=`;
+        const part = String(document.cookie || '')
+            .split(';')
+            .map((item) => item.trim())
+            .find((item) => item.startsWith(prefix));
+        return part ? decodeURIComponent(part.slice(prefix.length)) : '';
+    } catch (_error) {
+        return '';
+    }
+}
+
+function writeCookie(name, value, days = 7) {
+    try {
+        const maxAge = Math.max(60, Math.round(Number(days || 7) * 86400));
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value || '')}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+        return true;
+    } catch (_error) {
+        return false;
+    }
+}
+
+function pickParam(params, keys = []) {
+    for (const key of keys) {
+        if (params.has(key)) {
+            const value = String(params.get(key) || '').trim();
+            if (value) return value;
+        }
+    }
+    return '';
+}
 
 function normalizeTrafficPlatform(value = '') {
     const raw = String(value || '').trim().toLowerCase();
@@ -8376,12 +8442,15 @@ function inferTrafficPlatform(input = {}) {
     const fbclid = String(input?.fbclid || '').trim();
     const explicit = normalizeTrafficPlatform(input?.ad_platform || input?.utm_source || '');
     const referrer = String(input?.referrer || '').trim().toLowerCase();
+    const userAgent = String(input?.user_agent || input?.userAgent || navigator.userAgent || '').trim().toLowerCase();
 
     if (ttclid) return 'tiktok';
     if (fbclid) return 'meta';
     if (explicit) return explicit;
     if (referrer.includes('tiktok')) return 'tiktok';
     if (referrer.includes('facebook') || referrer.includes('instagram') || referrer.includes('meta')) return 'meta';
+    if (userAgent.includes('tiktok') || userAgent.includes('bytedance') || userAgent.includes('musical_ly')) return 'tiktok';
+    if (userAgent.includes('instagram') || userAgent.includes('fb_iab') || userAgent.includes('fban') || userAgent.includes('fbav') || userAgent.includes('fbios')) return 'meta';
     return '';
 }
 
@@ -8394,17 +8463,21 @@ function captureUtmParams() {
     const current = getUtmData();
     const hasIncomingTracking = hasIncomingTrackingParams(params);
     const updated = {
-        src: params.get('src') || current.src,
-        sck: params.get('sck') || current.sck,
-        utm_source: params.get('utm_source') || current.utm_source,
-        utm_medium: params.get('utm_medium') || current.utm_medium,
-        utm_campaign: params.get('utm_campaign') || current.utm_campaign,
-        utm_term: params.get('utm_term') || current.utm_term,
-        utm_content: params.get('utm_content') || current.utm_content,
-        gclid: params.get('gclid') || current.gclid,
+        src: pickParam(params, ['src']) || current.src,
+        sck: pickParam(params, ['sck']) || current.sck,
+        campaign: pickParam(params, ['campaign', 'campaign_id']) || current.campaign,
+        adset: pickParam(params, ['adset', 'adset_id']) || current.adset,
+        ad_id: pickParam(params, ['ad_id']) || current.ad_id,
+        placement: pickParam(params, ['placement']) || current.placement,
+        utm_source: pickParam(params, ['utm_source', 'src']) || current.utm_source,
+        utm_medium: pickParam(params, ['utm_medium']) || current.utm_medium,
+        utm_campaign: pickParam(params, ['utm_campaign', 'campaign', 'campaign_id', 'sck']) || current.utm_campaign,
+        utm_term: pickParam(params, ['utm_term', 'adset', 'adset_id']) || current.utm_term,
+        utm_content: pickParam(params, ['utm_content', 'ad_id', 'placement']) || current.utm_content,
+        gclid: pickParam(params, ['gclid']) || current.gclid,
         fbclid: params.has('fbclid') ? params.get('fbclid') : current.fbclid,
         ttclid: params.has('ttclid') ? params.get('ttclid') : current.ttclid,
-        ad_platform: params.get('ad_platform') || current.ad_platform,
+        ad_platform: pickParam(params, ['ad_platform']) || current.ad_platform,
         referrer: document.referrer || current.referrer,
         landing_page: hasIncomingTracking ? window.location.pathname : (current.landing_page || window.location.pathname)
     };
@@ -8418,7 +8491,11 @@ function captureUtmParams() {
     if (hasIncomingTracking && inferredPlatform === 'tiktok' && !params.has('fbclid')) {
         updated.fbclid = '';
     }
-    localStorage.setItem(STORAGE_KEYS.utm, JSON.stringify(updated));
+    state.utmFallback = updated;
+    const serialized = JSON.stringify(updated);
+    safeStorageSet(localStorage, STORAGE_KEYS.utm, serialized);
+    safeStorageSet(sessionStorage, STORAGE_KEYS.utmSession, serialized);
+    writeCookie(STORAGE_KEYS.utm, serialized, 7);
 }
 
 function trackPageView(page) {
@@ -8464,12 +8541,23 @@ function trackPageView(page) {
 }
 
 function getUtmData() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEYS.utm);
-        return raw ? JSON.parse(raw) : {};
-    } catch (_error) {
-        return {};
+    const candidates = [
+        safeStorageGet(localStorage, STORAGE_KEYS.utm),
+        safeStorageGet(sessionStorage, STORAGE_KEYS.utmSession),
+        readCookie(STORAGE_KEYS.utm)
+    ];
+    for (const raw of candidates) {
+        try {
+            const parsed = raw ? JSON.parse(raw) : null;
+            if (parsed && typeof parsed === 'object') {
+                state.utmFallback = parsed;
+                return parsed;
+            }
+        } catch (_error) {
+            // Try the next attribution store.
+        }
     }
+    return state.utmFallback || {};
 }
 
 async function ensureSiteConfig(force = false) {
@@ -9355,8 +9443,43 @@ function requireAddress() {
     return true;
 }
 
+function appendTrackingParamsToUrl(url) {
+    const utm = getUtmData();
+    if (!utm || typeof utm !== 'object') return url;
+
+    const pairs = {
+        src: utm.src || '',
+        sck: utm.sck || '',
+        utm_source: utm.utm_source || '',
+        utm_medium: utm.utm_medium || '',
+        utm_campaign: utm.utm_campaign || utm.campaign || '',
+        utm_term: utm.utm_term || utm.adset || '',
+        utm_content: utm.utm_content || utm.ad_id || utm.placement || '',
+        gclid: utm.gclid || '',
+        fbclid: utm.fbclid || '',
+        ttclid: utm.ttclid || '',
+        ad_platform: utm.ad_platform || ''
+    };
+    if (!Object.values(pairs).some((value) => String(value || '').trim())) {
+        return url;
+    }
+
+    try {
+        const parsed = new URL(url, window.location.origin);
+        Object.entries(pairs).forEach(([key, value]) => {
+            const clean = String(value || '').trim();
+            if (clean && !parsed.searchParams.has(key)) {
+                parsed.searchParams.set(key, clean);
+            }
+        });
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (_error) {
+        return url;
+    }
+}
+
 function redirect(url) {
-    let target = toRootRelativePath(url || '');
+    let target = appendTrackingParamsToUrl(toRootRelativePath(url || ''));
     if (!target) return;
 
     const currentPath = normalizeBackRedirectPath(`${window.location.pathname}${window.location.search || ''}`);
