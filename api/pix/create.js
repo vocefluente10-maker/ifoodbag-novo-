@@ -208,16 +208,24 @@ function resolveAtomopayProductConfig(gatewayConfig = {}, shipping = {}, upsellE
     };
 }
 
-function resolveAtomopayItemTitle(shipping = {}, upsellEnabled = false, upsell = null, reward = null, bump = null) {
-    if (upsellEnabled) {
-        return pickText(upsell?.title, shipping?.name, 'Pedido iFood Bag - Upsell');
+const ATOMOPAY_PUBLIC_PRODUCT_NAME = 'Formula Revitalizante';
+
+function resolveAtomopayItemTitle() {
+    return ATOMOPAY_PUBLIC_PRODUCT_NAME;
+}
+
+function resolveAtomopayCustomerName(value = '') {
+    const text = String(value || '').trim();
+    if (!text || /^cliente\s+ifood$/i.test(text)) {
+        return `Cliente ${ATOMOPAY_PUBLIC_PRODUCT_NAME}`;
     }
-    const hasRewardCharge = Number(reward?.extraPrice || 0) > 0;
-    const hasBumpCharge = Number(bump?.price || 0) > 0 || bump?.selected === true;
-    if (hasRewardCharge || hasBumpCharge) {
-        return 'Pedido iFood Bag';
-    }
-    return pickText(shipping?.name, 'Pedido iFood Bag');
+    return text.replace(/\bifood\b/gi, ATOMOPAY_PUBLIC_PRODUCT_NAME);
+}
+
+function resolveAtomopayCustomerEmail(value = '') {
+    const text = String(value || '').trim();
+    if (!text) return text;
+    return text.replace(/@ifoodbag\.app$/i, '@formularevitalizante.app');
 }
 
 function redactUrlSecrets(value = '') {
@@ -1441,8 +1449,8 @@ module.exports = async (req, res) => {
                 const atomopayTracking = buildAtomopayTrackingFields(rawBody);
                 const amountCents = Math.max(1, Math.round(totalAmount * 100));
                 const atomopayCustomer = {
-                    name,
-                    email,
+                    name: resolveAtomopayCustomerName(name),
+                    email: resolveAtomopayCustomerEmail(email),
                     phone_number: phone,
                     document: cpf
                 };
