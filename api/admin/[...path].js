@@ -4255,14 +4255,14 @@ async function utmfyTest(req, res) {
     const result = await sendUtmfy('pix_created', {
         source: 'admin_test',
         sessionId: `admin-${Date.now()}`,
-        amount: 19.9,
+        amount: 18.86,
         personal: {
             name: 'Teste Admin',
             email: 'teste@local.dev'
         },
         shipping: {
             name: 'Envio Padrao iFood',
-            price: 19.9
+            price: 18.86
         },
         utm: {
             utm_source: 'admin_test',

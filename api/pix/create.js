@@ -305,6 +305,36 @@ function asObject(input) {
     return input && typeof input === 'object' && !Array.isArray(input) ? input : {};
 }
 
+const ECONOMICO_SHIPPING_PRICE = 18.86;
+const LEGACY_ECONOMICO_SHIPPING_PRICE = 19.9;
+
+function isEconomicoShipping(shipping = {}) {
+    return String(shipping?.id || '').trim().toLowerCase() === 'economico';
+}
+
+function normalizeGatewayShippingPrice(shipping = {}, fallbackPrice = 0) {
+    const price = toBrlAmount(fallbackPrice);
+    if (!isEconomicoShipping(shipping)) return price;
+
+    const base = toBrlAmount(shipping?.basePrice || shipping?.originalPrice || price);
+    const hasLegacyValue = (
+        Math.abs(base - LEGACY_ECONOMICO_SHIPPING_PRICE) <= 0.01 ||
+        Math.abs(price - LEGACY_ECONOMICO_SHIPPING_PRICE) <= 0.01
+    );
+    if (!hasLegacyValue) return price;
+
+    const discount = Math.max(0, Number((base - price).toFixed(2)));
+    return Number(Math.max(0, ECONOMICO_SHIPPING_PRICE - discount).toFixed(2));
+}
+
+function normalizeGatewayShippingBasePrice(shipping = {}, shippingPrice = 0) {
+    const base = toBrlAmount(shipping?.basePrice || shipping?.originalPrice || shippingPrice);
+    if (isEconomicoShipping(shipping) && Math.abs(base - LEGACY_ECONOMICO_SHIPPING_PRICE) <= 0.01) {
+        return ECONOMICO_SHIPPING_PRICE;
+    }
+    return base || toBrlAmount(shippingPrice);
+}
+
 const REWARD_CATALOG = {
     bag: {
         id: 'bag',
@@ -950,26 +980,36 @@ module.exports = async (req, res) => {
         const streetNumber = extra?.noNumber ? 'S/N' : String(extra?.number || '').trim() || 'S/N';
         const complement = extra?.noComplement ? 'Sem complemento' : String(extra?.complement || '').trim() || 'Sem complemento';
 
-        let shippingPrice = toBrlAmount(shipping?.price || 0);
+        let shippingPrice = normalizeGatewayShippingPrice(shipping, shipping?.price || 0);
         let bumpPrice = bump?.price ? toBrlAmount(bump.price) : 0;
         if (bump?.selected === false) bumpPrice = 0;
         let totalAmount = Number((shippingPrice + rewardExtraPrice + bumpPrice).toFixed(2));
+        let usedAmountFallback = false;
         if (totalAmount <= 0 && value > 0) {
             totalAmount = Number(value.toFixed(2));
             if (shippingPrice <= 0) {
                 shippingPrice = Number(Math.max(0, totalAmount - rewardExtraPrice - bumpPrice).toFixed(2));
+                usedAmountFallback = true;
             }
+        }
+        const gatewayShippingPrice = usedAmountFallback
+            ? normalizeGatewayShippingPrice({ ...shipping, price: shippingPrice }, shippingPrice)
+            : shippingPrice;
+        if (usedAmountFallback && gatewayShippingPrice !== shippingPrice) {
+            shippingPrice = gatewayShippingPrice;
+            totalAmount = Number((shippingPrice + rewardExtraPrice + bumpPrice).toFixed(2));
         }
         if (!totalAmount || totalAmount <= 0) {
             return res.status(400).json({ error: 'Valor do frete invalido.' });
         }
+        const shippingBasePrice = normalizeGatewayShippingBasePrice(shipping, shippingPrice);
         const normalizedShipping = {
             ...(shipping || {}),
             id: String(shipping?.id || '').trim() || 'frete',
             name: String(shipping?.name || '').trim() || 'Frete Bag iFood',
             price: shippingPrice,
-            basePrice: toBrlAmount(shipping?.basePrice || shipping?.originalPrice || shippingPrice),
-            originalPrice: toBrlAmount(shipping?.originalPrice || shipping?.basePrice || shippingPrice)
+            basePrice: shippingBasePrice,
+            originalPrice: shippingBasePrice
         };
         const normalizedBump = {
             selected: bumpPrice > 0,
