@@ -3857,9 +3857,17 @@ function initPix() {
         if (pixIofStatus) pixIofStatus.textContent = 'Status: Pagamento confirmado';
         if (pixCorreiosStatus) pixCorreiosStatus.textContent = 'Status: Pagamento confirmado';
         setStage('upsell_iof');
-        setTimeout(() => {
-            redirect(getFirstUpsellPage());
-        }, 900);
+        ensureSiteConfig(true).then((cfg) => {
+            const isNew = cfg?.features?.upsellNew !== false;
+            const targetPage = isNew ? 'upsell-iof.html' : 'upsell-iof-antigo.html';
+            setTimeout(() => {
+                redirect(targetPage);
+            }, 500);
+        }).catch(() => {
+            setTimeout(() => {
+                redirect('upsell-iof.html');
+            }, 500);
+        });
     };
 
     const normalizePixStatus = (value) => {
