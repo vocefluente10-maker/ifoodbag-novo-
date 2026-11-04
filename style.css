@@ -7896,3 +7896,70 @@ body.modal-open {
     font-style: italic;
 }
 
+
+/* Big Toggle Switch for Upsell Control & Admin */
+.admin-switch-big {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.admin-switch-big input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.admin-switch-big__track {
+    position: relative;
+    width: 84px;
+    height: 44px;
+    background-color: #3a3a3e;
+    border-radius: 999px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.admin-switch-big__thumb {
+    position: absolute;
+    left: 4px;
+    width: 34px;
+    height: 34px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.admin-switch-big__label {
+    position: absolute;
+    right: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #888;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s;
+}
+
+.admin-switch-big input:checked + .admin-switch-big__track {
+    background-color: #EA1D2C;
+    border-color: #EA1D2C;
+    box-shadow: 0 0 16px rgba(234, 29, 44, 0.45);
+}
+
+.admin-switch-big input:checked + .admin-switch-big__track .admin-switch-big__thumb {
+    transform: translateX(40px);
+}
+
+.admin-switch-big input:checked + .admin-switch-big__track .admin-switch-big__label {
+    left: 12px;
+    right: auto;
+    color: #ffffff;
+}

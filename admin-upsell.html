@@ -71,19 +71,30 @@
           </div>
           <p class="admin-hint">Defina qual versao do Upsell 1 e apresentada ao cliente apos a confirmacao do PIX da bag.</p>
 
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 20px; margin-top: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-              <div>
-                <strong style="font-size: 1.1rem; display: block; margin-bottom: 4px;">Upsell 1 - Versao Nova (Taxa de Servico iFood)</strong>
-                <p class="admin-muted" style="margin: 0; font-size: 0.9rem;" id="upsell-mode-description">
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 24px; margin-top: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+              <div style="max-width: 600px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                  <strong style="font-size: 1.25rem;">Upsell 1 - Versao Nova (Taxa de Servico iFood)</strong>
+                  <span id="upsell-switch-indicator" style="font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: rgba(234,29,44,0.15); color: #EA1D2C; border: 1px solid rgba(234,29,44,0.3);">LIGADO</span>
+                </div>
+                <p class="admin-muted" style="margin: 0; font-size: 0.95rem; line-height: 1.5;" id="upsell-mode-description">
                   <strong>Ligado:</strong> Exibe a versao nova com design iFood oficial (Taxa de servico de R$ 17,73).<br>
                   <strong>Desligado:</strong> Exibe a versao antiga (Notificacao fiscal / gov.br).
                 </p>
               </div>
-              <label class="admin-switch" style="cursor: pointer; flex-shrink: 0;">
-                <input type="checkbox" id="feature-upsell-new" checked />
-                <span class="admin-switch__slider"></span>
-              </label>
+
+              <!-- Big Switch Button -->
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <label class="admin-switch-big" title="Clique para Ligar ou Desligar">
+                  <input type="checkbox" id="feature-upsell-new" checked />
+                  <span class="admin-switch-big__track">
+                    <span class="admin-switch-big__thumb"></span>
+                    <span class="admin-switch-big__label" id="switch-text-label">ON</span>
+                  </span>
+                </label>
+                <span style="font-size: 0.72rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Clique p/ alternar</span>
+              </div>
             </div>
           </div>
 

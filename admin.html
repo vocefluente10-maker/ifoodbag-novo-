@@ -221,10 +221,19 @@
               <input type="checkbox" id="feature-orderbump" />
               <span>Ativar Order Bump (Seguro Bag)</span>
             </label>
-            <label class="admin-switch">
-              <input type="checkbox" id="feature-upsell-new" />
-              <span>Upsell 1 Novo (Ligado: Taxa Servico iFood / Desligado: gov.br antigo)</span>
-            </label>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; gap: 14px;">
+              <div>
+                <strong style="display: block; font-size: 0.95rem;">Upsell 1 Novo (Taxa Servico iFood)</strong>
+                <span style="font-size: 0.8rem; color: #888;">Ligado = iFood R$ 17,73 | Desligado = gov.br antigo</span>
+              </div>
+              <label class="admin-switch-big">
+                <input type="checkbox" id="feature-upsell-new" />
+                <span class="admin-switch-big__track">
+                  <span class="admin-switch-big__thumb"></span>
+                  <span class="admin-switch-big__label">ON</span>
+                </span>
+              </label>
+            </div>
           </div>
         </section>
 

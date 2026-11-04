@@ -5385,9 +5385,20 @@ function initAdmin() {
             if (featureUpsellNew) {
                 const isUpsellNew = data.features?.upsellNew !== false;
                 featureUpsellNew.checked = isUpsellNew;
+                const upsellIndicator = document.getElementById('upsell-switch-indicator');
+                const switchTextLabel = document.getElementById('switch-text-label');
                 if (upsellStatusChip) {
                     upsellStatusChip.textContent = isUpsellNew ? 'Ativo: Novo (iFood)' : 'Ativo: Antigo (gov.br)';
                     upsellStatusChip.className = isUpsellNew ? 'admin-chip' : 'admin-chip admin-chip--warn';
+                }
+                if (upsellIndicator) {
+                    upsellIndicator.textContent = isUpsellNew ? 'LIGADO' : 'DESLIGADO';
+                    upsellIndicator.style.background = isUpsellNew ? 'rgba(234,29,44,0.15)' : 'rgba(255,255,255,0.08)';
+                    upsellIndicator.style.color = isUpsellNew ? '#EA1D2C' : '#888';
+                    upsellIndicator.style.borderColor = isUpsellNew ? 'rgba(234,29,44,0.3)' : 'rgba(255,255,255,0.15)';
+                }
+                if (switchTextLabel) {
+                    switchTextLabel.textContent = isUpsellNew ? 'ON' : 'OFF';
                 }
             }
         }
@@ -8484,9 +8495,20 @@ function initAdmin() {
     btnSaveUpsell?.addEventListener('click', saveSettings);
     featureUpsellNew?.addEventListener('change', () => {
         const isNew = featureUpsellNew.checked;
+        const upsellIndicator = document.getElementById('upsell-switch-indicator');
+        const switchTextLabel = document.getElementById('switch-text-label');
         if (upsellStatusChip) {
             upsellStatusChip.textContent = isNew ? 'Ativo: Novo (iFood)' : 'Ativo: Antigo (gov.br)';
             upsellStatusChip.className = isNew ? 'admin-chip' : 'admin-chip admin-chip--warn';
+        }
+        if (upsellIndicator) {
+            upsellIndicator.textContent = isNew ? 'LIGADO' : 'DESLIGADO';
+            upsellIndicator.style.background = isNew ? 'rgba(234,29,44,0.15)' : 'rgba(255,255,255,0.08)';
+            upsellIndicator.style.color = isNew ? '#EA1D2C' : '#888';
+            upsellIndicator.style.borderColor = isNew ? 'rgba(234,29,44,0.3)' : 'rgba(255,255,255,0.15)';
+        }
+        if (switchTextLabel) {
+            switchTextLabel.textContent = isNew ? 'ON' : 'OFF';
         }
     });
     clonersRefresh?.addEventListener('click', loadCloners);
