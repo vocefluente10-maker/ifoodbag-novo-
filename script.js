@@ -2991,7 +2991,7 @@ function initUpsell() {
     const shippingStored = loadShipping();
     const shipping = isShippingSelectionComplete(shippingStored) ? shippingStored : null;
     const pix = loadPix();
-    const offerPrice = 18.98;
+    const offerPrice = 17.73;
     const query = new URLSearchParams(window.location.search || '');
     const paidMode = query.get('paid') === '1';
 
@@ -3119,7 +3119,7 @@ function initUpsell() {
                 }
             });
         } catch (error) {
-            btnAccept.textContent = 'Quero receber em 1 dia por R$ 18,98';
+            btnAccept.textContent = 'Quero receber em 1 dia por R$ 17,73';
             showToast(error.message || 'Nao foi possivel gerar o PIX de adiantamento.', 'error');
             setLoading(false);
         }
