@@ -70,7 +70,7 @@
         { "source": "/pix-loading", "destination": "/pix-loading.html" },
         { "source": "/pix", "destination": "/pix.html" },
         { "source": "/remarketing", "destination": "/remarketing.html" },
-        { "source": "/upsell-iof", "destination": "/api/upsell-router" },
+        { "source": "/upsell-iof", "destination": "/upsell-iof.html" },
         { "source": "/upsell-correios", "destination": "/upsell-correios.html" },
         { "source": "/upsell", "destination": "/upsell.html" }
     ]

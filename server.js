@@ -51,20 +51,6 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-
-const { getSettingsState } = require('./lib/settings-store');
-
-app.get('/upsell-iof', async (_req, res) => {
-    try {
-        const settingsState = await getSettingsState({ strict: false });
-        const isNew = settingsState?.settings?.features?.upsellNew !== false;
-        const targetFile = isNew ? 'upsell-iof.html' : 'upsell-iof-antigo.html';
-        res.sendFile(path.join(__dirname, targetFile));
-    } catch (_err) {
-        res.sendFile(path.join(__dirname, 'upsell-iof.html'));
-    }
-});
-
 app.get('/admin', (_req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -124,7 +110,7 @@ const funnelRoutes = {
     '/pix-loading': 'pix-loading.html',
     '/pix': 'pix.html',
     '/remarketing': 'remarketing.html',
-    
+    '/upsell-iof': 'upsell-iof.html',
     '/upsell-correios': 'upsell-correios.html',
     '/upsell': 'upsell.html'
 };

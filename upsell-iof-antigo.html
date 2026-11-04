@@ -31,20 +31,6 @@
             line-height: 1.6;
         }
     </style>
-    <script>
-        // Verificacao instantanea: se upsell novo estiver ligado no admin, redireciona para a versao nova
-        (function() {
-            try {
-                fetch('/api/site/config', { cache: 'no-store' })
-                    .then(function(r) { return r.json(); })
-                    .then(function(d) {
-                        if (d && d.features && d.features.upsellNew !== false) {
-                            window.location.replace('upsell-iof.html' + window.location.search);
-                        }
-                    }).catch(function() {});
-            } catch(e) {}
-        })();
-    </script>
 </head>
 
 <body data-page="upsell-iof" class="flex flex-col min-h-screen">
