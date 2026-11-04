@@ -53,6 +53,7 @@
         { "source": "/admin/utmfy", "destination": "/admin-utmfy.html" },
         { "source": "/admin/smsmais", "destination": "/admin-smsmais.html" },
         { "source": "/admin/gateways", "destination": "/admin-gateways.html" },
+        { "source": "/admin/upsell", "destination": "/admin-upsell.html" },
         { "source": "/admin/pages", "destination": "/admin-pages.html" },
         { "source": "/admin/publico", "destination": "/admin-publico.html" },
         { "source": "/admin/vendas", "destination": "/admin-sales.html" },

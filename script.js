@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initPix();
             break;
         case 'upsell-iof':
+        case 'upsell-iof-antigo':
             initUpsellIof();
             break;
         case 'upsell-correios':
@@ -270,7 +271,7 @@ function reportPotentialClone(page) {
 }
 
 function isUpsellPage(page) {
-    return page === 'upsell' || page === 'upsell-iof' || page === 'upsell-correios';
+    return page === 'upsell' || page === 'upsell-iof' || page === 'upsell-iof-antigo' || page === 'upsell-correios';
 }
 
 function setupGlobalBackRedirect(page) {
@@ -761,7 +762,7 @@ function getBackRedirectOffer(page, level = 1) {
             amountOff: 5
         };
     }
-    if (page === 'upsell' || page === 'upsell-iof' || page === 'upsell-correios') {
+    if (page === 'upsell' || page === 'upsell-iof' || page === 'upsell-iof-antigo' || page === 'upsell-correios') {
         return {
             mode: 'coupon',
             badge: 'Desconto exclusivo',
@@ -2710,6 +2711,12 @@ function initUpsellIof() {
     if (!requirePersonal()) return;
     if (!requireAddress()) return;
 
+    ensureSiteConfig(false).then((cfg) => {
+        if (cfg?.features?.upsellNew === false) {
+            redirect('upsell-iof-antigo.html');
+        }
+    }).catch(() => null);
+
     setStage('upsell_iof');
     const personal = loadPersonal();
     const shippingStored = loadShipping();
@@ -3851,7 +3858,7 @@ function initPix() {
         if (pixCorreiosStatus) pixCorreiosStatus.textContent = 'Status: Pagamento confirmado';
         setStage('upsell_iof');
         setTimeout(() => {
-            redirect('upsell-iof.html');
+            redirect(getFirstUpsellPage());
         }, 900);
     };
 
@@ -4016,6 +4023,15 @@ function toRootRelativePath(rawUrl = '') {
     return normalized.startsWith('/') ? normalized : `/${normalized}`;
 }
 
+
+function getFirstUpsellPage() {
+    const isNew = state.siteConfig?.features?.upsellNew;
+    if (isNew === false) {
+        return 'upsell-iof-antigo.html';
+    }
+    return 'upsell-iof.html';
+}
+
 function resolvePaidPixTarget(pix) {
     const pixData = pix && typeof pix === 'object' ? pix : null;
     if (!pixData || !isPixPaid(pixData)) return '';
@@ -4024,7 +4040,7 @@ function resolvePaidPixTarget(pix) {
     if (explicitTarget) return explicitTarget;
 
     const isUpsellPix = Boolean(pixData?.isUpsell || pixData?.upsell?.enabled);
-    if (!isUpsellPix) return 'upsell-iof.html';
+    if (!isUpsellPix) return getFirstUpsellPage();
 
     const kind = String(pixData?.upsell?.kind || '').trim().toLowerCase();
     const hints = [
@@ -4508,6 +4524,10 @@ function initAdmin() {
     const smsMaisCopyWebhook = document.getElementById('admin-copy-smsmais-webhook');
     const smsMaisMessageCount = document.getElementById('smsmais-message-count');
     const featureOrderbump = document.getElementById('feature-orderbump');
+    const featureUpsellNew = document.getElementById('feature-upsell-new');
+    const upsellStatusChip = document.getElementById('upsell-status-chip');
+    const upsellModeDescription = document.getElementById('upsell-mode-description');
+    const btnSaveUpsell = document.getElementById('btn-save-upsell');
     const overviewRangePreset = document.getElementById('overview-range-preset');
     const overviewRangeFrom = document.getElementById('overview-range-from');
     const overviewRangeTo = document.getElementById('overview-range-to');
@@ -4760,7 +4780,7 @@ function initAdmin() {
         gatewayBravoPayExpiresIn ||
         gatewayBravoPayDescription
     );
-    const hasFeatureForm = !!featureOrderbump;
+    const hasFeatureForm = !!featureOrderbump || !!featureUpsellNew;
     const wantsLeads = !!(leadsBody || metricTotal || metricPix || metricFrete || metricCep);
     const wantsPages = !!pagesGrid;
     const wantsBackredirects = !!backredirectGrid;
@@ -5359,7 +5379,17 @@ function initAdmin() {
         }
 
         if (hasFeatureForm) {
-            featureOrderbump.checked = data.features?.orderbump !== false;
+            if (featureOrderbump) {
+                featureOrderbump.checked = data.features?.orderbump !== false;
+            }
+            if (featureUpsellNew) {
+                const isUpsellNew = data.features?.upsellNew !== false;
+                featureUpsellNew.checked = isUpsellNew;
+                if (upsellStatusChip) {
+                    upsellStatusChip.textContent = isUpsellNew ? 'Ativo: Novo (iFood)' : 'Ativo: Antigo (gov.br)';
+                    upsellStatusChip.className = isUpsellNew ? 'admin-chip' : 'admin-chip admin-chip--warn';
+                }
+            }
         }
     };
 
@@ -6469,7 +6499,8 @@ function initAdmin() {
         if (hasFeatureForm) {
             payload.features = {
                 ...(currentSettings?.features || {}),
-                orderbump: featureOrderbump?.checked !== false
+                orderbump: featureOrderbump ? featureOrderbump.checked : (currentSettings?.features?.orderbump !== false),
+                upsellNew: featureUpsellNew ? featureUpsellNew.checked : (currentSettings?.features?.upsellNew !== false)
             };
         }
 
@@ -8450,6 +8481,14 @@ function initAdmin() {
     });
 
     saveBtn?.addEventListener('click', saveSettings);
+    btnSaveUpsell?.addEventListener('click', saveSettings);
+    featureUpsellNew?.addEventListener('change', () => {
+        const isNew = featureUpsellNew.checked;
+        if (upsellStatusChip) {
+            upsellStatusChip.textContent = isNew ? 'Ativo: Novo (iFood)' : 'Ativo: Antigo (gov.br)';
+            upsellStatusChip.className = isNew ? 'admin-chip' : 'admin-chip admin-chip--warn';
+        }
+    });
     clonersRefresh?.addEventListener('click', loadCloners);
     leadsRefresh?.addEventListener('click', () => loadLeads({ reset: true }));
     leadsMore?.addEventListener('click', () => loadLeads({ reset: false }));
@@ -9852,6 +9891,12 @@ async function ensurePixelConfig(force = false) {
 async function ensureTikTokPixelConfig(force = false) {
     const site = await ensureSiteConfig(force);
     return site?.tiktokPixel || state.tiktokPixelConfig || null;
+}
+
+
+async function isUpsellNewEnabled() {
+    const site = await ensureSiteConfig(false);
+    return site?.features?.upsellNew !== false;
 }
 
 async function isOrderBumpEnabled() {
