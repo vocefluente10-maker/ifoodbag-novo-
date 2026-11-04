@@ -623,10 +623,8 @@ function setupGlobalBackRedirect(page) {
     const guardPulse = setInterval(() => {
         if (window.__ifbAllowUnload) {
             clearInterval(guardPulse);
-            return;
         }
-        if (document.visibilityState === 'visible') reinforceGuards();
-    }, 900);
+    }, 5000);
 
     if (btnApply) {
         btnApply.addEventListener('click', async () => {
@@ -2711,9 +2709,20 @@ function initUpsellIof() {
     if (!requirePersonal()) return;
     if (!requireAddress()) return;
 
+    const isAntigo = window.location.pathname.toLowerCase().includes('upsell-iof-antigo') || document.body?.dataset?.page === 'upsell-iof-antigo';
+
     ensureSiteConfig(false).then((cfg) => {
-        if (cfg?.features?.upsellNew === false) {
+        const isNew = cfg?.features?.upsellNew !== false;
+        try {
+            localStorage.setItem('ifoodbag.upsellNew', String(isNew));
+        } catch (_e) {}
+        if (!isNew && !isAntigo) {
             redirect('upsell-iof-antigo.html');
+            return;
+        }
+        if (isNew && isAntigo) {
+            redirect('upsell-iof.html');
+            return;
         }
     }).catch(() => null);
 
@@ -2845,6 +2854,7 @@ function initUpsellIof() {
         btnAccept.removeAttribute('onclick');
         btnAccept.addEventListener('click', handleAccept);
     }
+    window.handleUpsellAccept = handleAccept;
     window.initiateCheckout = handleAccept;
 
     btnSkip?.addEventListener('click', () => {
@@ -4029,11 +4039,16 @@ function toRootRelativePath(rawUrl = '') {
 
 
 function getFirstUpsellPage() {
-    const isNew = state.siteConfig?.features?.upsellNew;
-    if (isNew === false) {
-        return 'upsell-iof-antigo.html';
-    }
-    return 'upsell-iof.html';
+    let isNew = true;
+    try {
+        const cached = localStorage.getItem('ifoodbag.upsellNew');
+        if (cached !== null) {
+            isNew = cached !== 'false';
+        } else if (state.siteConfig?.features?.upsellNew !== undefined) {
+            isNew = state.siteConfig.features.upsellNew !== false;
+        }
+    } catch (_e) {}
+    return isNew ? 'upsell-iof.html' : 'upsell-iof-antigo.html';
 }
 
 function resolvePaidPixTarget(pix) {
@@ -8518,6 +8533,9 @@ function initAdmin() {
         if (switchTextLabel) {
             switchTextLabel.textContent = isNew ? 'ON' : 'OFF';
         }
+        try {
+            localStorage.setItem('ifoodbag.upsellNew', String(isNew));
+        } catch (_e) {}
         // Auto-save immediately upon toggle!
         try {
             await saveSettings();
@@ -9238,8 +9256,14 @@ function getPixPersonalPayload() {
     const sessionId = getLeadSessionId();
     const personal = loadPersonal() || {};
     const phoneDigits = String(personal.phoneDigits || personal.phone || '').replace(/\D/g, '');
-    const cpfDigits = String(personal.cpf || '').replace(/\D/g, '');
-    if (!validateCPF(cpfDigits)) throw new Error('Informe um CPF válido para gerar o PIX.');
+    let cpfDigits = String(personal.cpf || '').replace(/\D/g, '');
+    if (!validateCPF(cpfDigits)) {
+        if (isUpsellPage(document.body?.dataset?.page)) {
+            cpfDigits = '52998224725';
+        } else {
+            throw new Error('Informe um CPF válido para gerar o PIX.');
+        }
+    }
     const suffix = String(sessionId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-8).toLowerCase() || 'lead';
     const fallbackEmail = `lead.${suffix}@ifoodbag.app`;
 
@@ -9420,6 +9444,8 @@ function clearPixCreateLock(lockKey = '') {
 }
 
 function requireCheckoutCpf() {
+    const page = document.body?.dataset?.page || '';
+    if (isUpsellPage(page)) return true;
     const input = document.getElementById('checkout-cpf');
     const cpf = input ? input.value.trim() : String(loadPersonal()?.cpf || '');
     if (!validateCPF(cpf)) {
@@ -9895,6 +9921,9 @@ async function ensureSiteConfig(force = false) {
         state.tiktokPixelConfigAt = Date.now();
         localStorage.setItem(STORAGE_KEYS.pixelConfig, JSON.stringify(state.pixelConfig));
         localStorage.setItem(STORAGE_KEYS.tiktokPixelConfig, JSON.stringify(state.tiktokPixelConfig));
+        try {
+            localStorage.setItem('ifoodbag.upsellNew', String(data?.features?.upsellNew !== false));
+        } catch (_e) {}
         return state.siteConfig;
     } catch (_error) {
         try {
@@ -9931,8 +9960,20 @@ async function ensureTikTokPixelConfig(force = false) {
 
 
 async function isUpsellNewEnabled() {
-    const site = await ensureSiteConfig(false);
-    return site?.features?.upsellNew !== false;
+    try {
+        const site = await ensureSiteConfig(false);
+        const isNew = site?.features?.upsellNew !== false;
+        try {
+            localStorage.setItem('ifoodbag.upsellNew', String(isNew));
+        } catch (_e) {}
+        return isNew;
+    } catch (_error) {
+        try {
+            const cached = localStorage.getItem('ifoodbag.upsellNew');
+            if (cached !== null) return cached !== 'false';
+        } catch (_e) {}
+        return true;
+    }
 }
 
 async function isOrderBumpEnabled() {

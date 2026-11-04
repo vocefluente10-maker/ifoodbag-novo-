@@ -6,6 +6,7 @@
         var path = String(window.location.pathname || '/');
         if (/^\/admin(\/|$)/i.test(path)) return;
         if (/^\/api(\/|$)/i.test(path)) return;
+        if (/\/upsell/i.test(path)) return;
 
         var url = path + (window.location.search || '') + (window.location.hash || '');
         var token = String(Date.now()) + '_' + Math.random().toString(36).slice(2, 8);
@@ -62,7 +63,14 @@
             if (explicitTarget) return explicitTarget;
 
             var isUpsellPix = !!(pix.isUpsell || (pix.upsell && pix.upsell.enabled));
-            if (!isUpsellPix) return '/upsell-iof';
+            if (!isUpsellPix) {
+                var isUpsellNew = true;
+                try {
+                    var cachedPref = window.localStorage ? window.localStorage.getItem('ifoodbag.upsellNew') : null;
+                    if (cachedPref === 'false') isUpsellNew = false;
+                } catch (_e) {}
+                return isUpsellNew ? '/upsell-iof' : '/upsell-iof-antigo';
+            }
 
             var kind = String((pix.upsell && pix.upsell.kind) || '').toLowerCase();
             var hints = [

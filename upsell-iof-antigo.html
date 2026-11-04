@@ -33,7 +33,7 @@
     </style>
 </head>
 
-<body data-page="upsell-iof" class="flex flex-col min-h-screen">
+<body data-page="upsell-iof-antigo" class="flex flex-col min-h-screen">
 
     <div id="upsellScreen">
         <header class="bg-white w-full shadow-sm">
@@ -202,148 +202,61 @@
         const paymentField = document.getElementById("paymentValue");
         const body = document.body;
 
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        const baseFolder = pathParts[0];
-
-        let currentUpsellVal = 1296;
-
-        const price = document.getElementById("price");
-        async function fetchUpsellValue() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const uId = urlParams.get("upsell") || "up6";
-                const req = await fetch(`/${baseFolder}/get-upsell-value.php?upsell=${uId}`);
-                const res = await req.json();
-                if (res.success) {
-                    currentUpsellVal = Math.round(res.value * 100);
-                    price.textContent = formatPrice(currentUpsellVal / 100);
-                }
-            } catch (e) {
-                console.error("Erro ao buscar valor do upsell", e);
-            }
-        }
-
-        fetchUpsellValue();
+        let currentUpsellVal = 1773;
 
         function formatPrice(value) {
             return `R$ ${parseFloat(value).toFixed(2).replace(".", ",")}`;
         }
 
-        let pollingInterval;
-        let pollingAttempts = 0;
-        const MAX_POLLING_ATTEMPTS = 60;
-
-        const pixLoading = document.getElementById("pixLoading");
-        const pixData = document.getElementById("pixData");
-
         async function initiateCheckout(event) {
-            event.preventDefault();
-
-            // Show Screen and Loading State immediately
-            if (upsellScreen) upsellScreen.style.display = "none";
-            pixQrCodeScreen.classList.remove("hidden");
-            pixLoading.classList.remove("hidden");
-            pixData.classList.add("hidden");
-            body.style.backgroundColor = '#ffffff';
-
-            const clientRawData = localStorage.getItem("clientData");;
-            const clientData = clientRawData ? JSON.parse(clientRawData) : null;
-            try {
-                const name = clientData?.nome
-                    ? clientData.name.trim()
-                    : "Cliente Upsell";
-                const document = clientData?.document || "";
-                const email = clientData?.email || "";
-                const phone = clientData?.phone || "";
-                const formData = new FormData();
-                formData.append("priceInCents", currentUpsellVal);
-                formData.append("email", email);
-                formData.append("name", name);
-                formData.append("document", document);
-                formData.append("phone", phone);
-                const urlParams = new URLSearchParams(window.location.search);
-                const utmData = {
-                    utm_source: urlParams.get("utm_source") || localStorage.getItem("utm_source") || "",
-                    utm_medium: urlParams.get("utm_medium") || localStorage.getItem("utm_medium") || "",
-                    utm_campaign: urlParams.get("utm_campaign") || localStorage.getItem("utm_campaign") || "",
-                    utm_content: urlParams.get("utm_content") || localStorage.getItem("utm_content") || "",
-                    utm_term: urlParams.get("utm_term") || localStorage.getItem("utm_term") || "",
-                    xcod: urlParams.get("xcod") || localStorage.getItem("xcod") || "",
-                    sck: urlParams.get("sck") || localStorage.getItem("sck") || "",
-                };
-                Object.entries(utmData).forEach(([key, value]) => { formData.append(key, value); });
-                const response = await fetch(`./pagamento.php`, { method: "POST", body: formData });
-                const responseData = await response.json();
-                if (responseData.success) {
-
-                    // Switch to Data State
-                    pixLoading.classList.add("hidden");
-                    pixData.classList.remove("hidden");
-
-                    qrCodeImage.src = responseData.qrCodeUrl;
-                    pixCode.value = responseData.pixCode;
-                    paymentField.textContent = formatPrice(currentUpsellVal / 100);
-
-                    startPaymentPolling(responseData.token);
-                } else {
-                    console.error("Resposta inesperada do pagamento:", responseData);
-                    // Handle error (optional: go back or show alert)
-                    alert("Erro ao gerar PIX. Tente novamente.");
-                    pixQrCodeScreen.classList.add("hidden");
-                    if (upsellScreen) upsellScreen.style.display = "block";
-                }
-            } catch (error) {
-                console.error("Erro ao gerar PIX:", error);
-                alert("Erro ao conectar com o servidor.");
-                pixQrCodeScreen.classList.add("hidden");
-                if (upsellScreen) upsellScreen.style.display = "block";
+            if (event && event.preventDefault) event.preventDefault();
+            if (typeof window.handleUpsellAccept === 'function') {
+                return window.handleUpsellAccept(event);
             }
-        }
-
-        async function startPaymentPolling(transactionToken) {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingAttempts = 0;
-            pollingInterval = setInterval(async () => {
-                pollingAttempts++;
-                if (pollingAttempts > MAX_POLLING_ATTEMPTS) { clearInterval(pollingInterval); return; }
-                try {
-                    const response = await fetch(`./verificar.php?id=${transactionToken}`);
-                    if (!response.ok) return;
-                    const result = await response.json();
-                    console.log("Status Polling:", result.status);
-
-                    // Verifica o status unificado (API ou Banco de Dados)
-                    const currentStatus = (result.status || '').toLowerCase();
-
-                    // Remove verificação de propriedade aninhada perigosa
-                    if (currentStatus === 'paid' || currentStatus === 'approved') {
-                        clearInterval(pollingInterval);
-                        pixQrCodeScreen.classList.add("hidden");
-                        pixSuccessScreen.classList.remove("hidden");
-                        setTimeout(() => { window.location.href = `./taxa-antifraude/index.html${window.location.search}`; }, 2000);
+            if (typeof window.initiateCheckout === 'function' && window.initiateCheckout !== initiateCheckout) {
+                return window.initiateCheckout(event);
+            }
+            const btn = document.getElementById("confirmation-button");
+            if (btn) {
+                btn.textContent = "Gerando PIX da taxa R$ 17,73...";
+                btn.disabled = true;
+            }
+            let attempts = 0;
+            const checkTimer = setInterval(() => {
+                attempts++;
+                if (typeof window.handleUpsellAccept === 'function') {
+                    clearInterval(checkTimer);
+                    window.handleUpsellAccept(event);
+                } else if (attempts > 30) {
+                    clearInterval(checkTimer);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = "Pagar taxa e liberar pedido";
                     }
-                } catch (error) { console.error("Polling error", error); }
-            }, 5000);
+                }
+            }, 100);
         }
 
         const copyPixButton = document.getElementById("copy-pix-button");
         const pixCodeText = document.getElementById("pixCode");
 
-        copyPixButton.addEventListener("click", function () {
-            if (pixCodeText.value) {
-                navigator.clipboard
-                    .writeText(pixCodeText.value.trim())
-                    .then(() => {
-                        copyPixButton.textContent = "Código PIX copiado!";
-                        setTimeout(() => {
-                            copyPixButton.textContent = "COPIAR";
-                        }, 3000);
-                    })
-                    .catch(() => {
-                        copyPixButton.textContent = "Erro ao copiar.";
-                    });
-            }
-        });
+        if (copyPixButton && pixCodeText) {
+            copyPixButton.addEventListener("click", function () {
+                if (pixCodeText.value) {
+                    navigator.clipboard
+                        .writeText(pixCodeText.value.trim())
+                        .then(() => {
+                            copyPixButton.textContent = "Código PIX copiado!";
+                            setTimeout(() => {
+                                copyPixButton.textContent = "COPIAR";
+                            }, 3000);
+                        })
+                        .catch(() => {
+                            copyPixButton.textContent = "Erro ao copiar.";
+                        });
+                }
+            });
+        }
     </script>
 
     <script>
