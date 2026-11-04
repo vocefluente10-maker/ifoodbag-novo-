@@ -6326,18 +6326,16 @@ function initAdmin() {
     };
 
     const saveSettings = async () => {
-        if (!saveBtn) return;
-        if (!currentSettingsLoaded || !currentSettingsRevision) {
-            if (saveStatus) {
-                saveStatus.textContent = 'Recarregue as configuracoes antes de salvar.';
-                setTimeout(() => {
-                    if (saveStatus) saveStatus.textContent = '';
-                }, 3000);
-            }
-            return;
+        const anySaveBtn = saveBtn || btnSaveUpsell || document.getElementById('admin-save');
+        if (!currentSettingsLoaded) {
+            try {
+                await loadSettings();
+            } catch (_e) {}
         }
-        saveBtn.disabled = true;
+        if (anySaveBtn) anySaveBtn.disabled = true;
+        if (btnSaveUpsell) btnSaveUpsell.disabled = true;
         if (saveStatus) saveStatus.textContent = 'Salvando...';
+        showToast('Salvando configuracoes...', 'info');
 
         const payload = {
             _meta: {
@@ -6523,11 +6521,16 @@ function initAdmin() {
 
         if (saveStatus) {
             saveStatus.textContent = res.ok
-                ? 'Configuracoes salvas.'
+                ? 'Configuracoes salvas com sucesso!'
                 : (result?.error || 'Falha ao salvar.');
             setTimeout(() => {
                 if (saveStatus) saveStatus.textContent = '';
-            }, 2500);
+            }, 3000);
+        }
+        if (res.ok) {
+            showToast('Configuracoes salvas com sucesso!', 'success');
+        } else {
+            showToast(result?.error || 'Erro ao salvar configuracoes.', 'error');
         }
         if (res.ok) {
             currentSettingsLoaded = false;
@@ -6543,7 +6546,8 @@ function initAdmin() {
                 metricActiveGateway.textContent = gatewayLabelForUi(activeGateway);
             }
         }
-        saveBtn.disabled = false;
+        if (saveBtn) saveBtn.disabled = false;
+        if (btnSaveUpsell) btnSaveUpsell.disabled = false;
     };
 
     const runPixelTest = async () => {
@@ -8493,7 +8497,7 @@ function initAdmin() {
 
     saveBtn?.addEventListener('click', saveSettings);
     btnSaveUpsell?.addEventListener('click', saveSettings);
-    featureUpsellNew?.addEventListener('change', () => {
+    featureUpsellNew?.addEventListener('change', async () => {
         const isNew = featureUpsellNew.checked;
         const upsellIndicator = document.getElementById('upsell-switch-indicator');
         const switchTextLabel = document.getElementById('switch-text-label');
@@ -8509,6 +8513,12 @@ function initAdmin() {
         }
         if (switchTextLabel) {
             switchTextLabel.textContent = isNew ? 'ON' : 'OFF';
+        }
+        // Auto-save immediately upon toggle!
+        try {
+            await saveSettings();
+        } catch (err) {
+            console.error('Erro ao salvar upsell switch automaticamente:', err);
         }
     });
     clonersRefresh?.addEventListener('click', loadCloners);
