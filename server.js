@@ -111,6 +111,7 @@ const funnelRoutes = {
     '/pix': 'pix.html',
     '/remarketing': 'remarketing.html',
     '/upsell-iof': 'upsell-iof.html',
+    '/upsell-iof-antigo': 'upsell-iof-antigo.html',
     '/upsell-correios': 'upsell-correios.html',
     '/upsell': 'upsell.html'
 };

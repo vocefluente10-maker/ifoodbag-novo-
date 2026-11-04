@@ -10744,7 +10744,8 @@ function isDirectCheckoutMode() {
 }
 
 function requirePersonal() {
-    if (isDirectCheckoutMode()) return true;
+    const page = document.body.dataset.page || '';
+    if (isDirectCheckoutMode() || isUpsellPage(page)) return true;
     const personal = loadPersonal();
     if (!personal || !personal.name || !personal.email || !personal.phone) {
         redirect('dados.html');
@@ -10754,7 +10755,8 @@ function requirePersonal() {
 }
 
 function requireAddress() {
-    if (isDirectCheckoutMode()) return true;
+    const page = document.body.dataset.page || '';
+    if (isDirectCheckoutMode() || isUpsellPage(page)) return true;
     if (!loadAddress()) {
         redirect('endereco.html');
         return false;
