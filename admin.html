@@ -203,6 +203,11 @@
               <em id="metric-gateway-paradise-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>PinguPag</span>
+              <strong id="metric-gateway-pingupag-conv">0%</strong>
+              <em id="metric-gateway-pingupag-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -320,6 +325,34 @@
             <div class="input-group">
               <input type="text" id="gateway-paradise-description" class="floating-input" placeholder=" " />
               <label for="gateway-paradise-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+            </div>
+            <label class="admin-switch">
+              <input type="checkbox" id="gateway-pingupag-enabled" />
+              <span>PinguPag ativo</span>
+            </label>
+            <div class="input-group">
+              <input type="text" id="gateway-pingupag-base-url" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-base-url" class="floating-label">PinguPag Base URL</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="gateway-pingupag-api-key" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-api-key" class="floating-label">PinguPag X-API-Key</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="gateway-pingupag-product-hash" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-product-hash" class="floating-label">PinguPag Product Hash (opcional)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-pingupag-orderbump-hash" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-orderbump-hash" class="floating-label">PinguPag Orderbump Hash (opcional)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-pingupag-source" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-source" class="floating-label">PinguPag Source (padrao: api_externa)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-pingupag-description" class="floating-input" placeholder=" " />
+              <label for="gateway-pingupag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
             </div>
             <label class="admin-switch">
               <input type="checkbox" id="gateway-clownpay-enabled" />

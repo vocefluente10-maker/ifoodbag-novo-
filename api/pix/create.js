@@ -79,7 +79,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
         const config = payments?.gateways?.[gateway] || {};
         if (gateway === 'ghostspay') return hasGhostspayCredentials(config);
         if (gateway === 'sunize') return hasSunizeCredentials(config);
-        if (gateway === 'paradise' || gateway === 'clownpay') return hasParadiseCredentials(config);
+        if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') return hasParadiseCredentials(config);
         if (gateway === 'atomopay') return hasAtomopayCredentials(config);
         if (gateway === 'bravopay') return hasBravoPayCredentials(config);
         return false;
@@ -105,7 +105,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
 
     const allDisabled = priority.every((gateway) => !isEnabled(gateway));
     if (allDisabled) {
-        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay'];
+        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag'];
         const credentialFallbacks = [];
         for (const gateway of operationalFallback) {
             if (hasGatewayCredentials(gateway)) credentialFallbacks.push(gateway);
@@ -857,7 +857,7 @@ async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
         return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
     }
 
-    if (gateway === 'paradise' || gateway === 'clownpay') {
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const quickConfig = {
             ...gatewayConfig,
             timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
@@ -1500,7 +1500,7 @@ module.exports = async (req, res) => {
                 paymentQrUrl = sunizeData.paymentQrUrl;
                 statusRaw = sunizeData.status;
                 externalId = sunizeData.externalId || externalId;
-            } else if (gateway === 'paradise' || gateway === 'clownpay') {
+            } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
                 if (gateway === 'clownpay') gatewayConfig = require('../../lib/clownpay-provider').resolveCreateConfig(gatewayConfig, payments, upsellEnabled);
                 if (!hasParadiseCredentials(gatewayConfig)) {
                     console.warn('[pix] paradise missing credentials', {

@@ -4337,19 +4337,26 @@ function initAdmin() {
     const gatewaySunizeApiSecret = document.getElementById('gateway-sunize-api-secret');
     const gatewayParadiseEnabled = document.getElementById('gateway-paradise-enabled');
     const gatewayClownPayEnabled = document.getElementById('gateway-clownpay-enabled');
+    const gatewayPingupagEnabled = document.getElementById('gateway-pingupag-enabled');
     const gatewayParadiseBaseUrl = document.getElementById('gateway-paradise-base-url');
     const gatewayClownPayBaseUrl = document.getElementById('gateway-clownpay-base-url');
+    const gatewayPingupagBaseUrl = document.getElementById('gateway-pingupag-base-url');
     const gatewayParadiseApiKey = document.getElementById('gateway-paradise-api-key');
     const gatewayClownPaySubaccountApiKey = document.getElementById('gateway-clownpay-subaccount-api-key');
     const gatewayClownPayApiKey = document.getElementById('gateway-clownpay-api-key');
+    const gatewayPingupagApiKey = document.getElementById('gateway-pingupag-api-key');
     const gatewayParadiseProductHash = document.getElementById('gateway-paradise-product-hash');
     const gatewayClownPayProductHash = document.getElementById('gateway-clownpay-product-hash');
+    const gatewayPingupagProductHash = document.getElementById('gateway-pingupag-product-hash');
     const gatewayParadiseOrderbumpHash = document.getElementById('gateway-paradise-orderbump-hash');
     const gatewayClownPayOrderbumpHash = document.getElementById('gateway-clownpay-orderbump-hash');
+    const gatewayPingupagOrderbumpHash = document.getElementById('gateway-pingupag-orderbump-hash');
     const gatewayParadiseSource = document.getElementById('gateway-paradise-source');
     const gatewayClownPaySource = document.getElementById('gateway-clownpay-source');
+    const gatewayPingupagSource = document.getElementById('gateway-pingupag-source');
     const gatewayParadiseDescription = document.getElementById('gateway-paradise-description');
     const gatewayClownPayDescription = document.getElementById('gateway-clownpay-description');
+    const gatewayPingupagDescription = document.getElementById('gateway-pingupag-description');
     const gatewayAtomopayEnabled = document.getElementById('gateway-atomopay-enabled');
     const gatewayAtomopayBaseUrl = document.getElementById('gateway-atomopay-base-url');
     const gatewayAtomopayApiToken = document.getElementById('gateway-atomopay-api-token');
@@ -4372,6 +4379,7 @@ function initAdmin() {
     const gatewaySunizeState = document.getElementById('gateway-sunize-state');
     const gatewayParadiseState = document.getElementById('gateway-paradise-state');
     const gatewayClownPayState = document.getElementById('gateway-clownpay-state');
+    const gatewayPingupagState = document.getElementById('gateway-pingupag-state');
     const gatewayAtomopayState = document.getElementById('gateway-atomopay-state');
     const gatewayBravoPayState = document.getElementById('gateway-bravopay-state');
     const gatewayCards = Array.from(document.querySelectorAll('[data-gateway-card]'));
@@ -4384,6 +4392,7 @@ function initAdmin() {
     const gatewayTestSunize = document.getElementById('gateway-test-sunize');
     const gatewayTestParadise = document.getElementById('gateway-test-paradise');
     const gatewayTestClownPay = document.getElementById('gateway-test-clownpay');
+    const gatewayTestPingupag = document.getElementById('gateway-test-pingupag');
     const gatewayTestAtomopay = document.getElementById('gateway-test-atomopay');
     const gatewayTestBravoPay = document.getElementById('gateway-test-bravopay');
     const gatewayTestGenerate = document.getElementById('gateway-test-generate');
@@ -4461,8 +4470,10 @@ function initAdmin() {
     const metricGatewaySunizeDetail = document.getElementById('metric-gateway-sunize-detail');
     const metricGatewayParadiseConv = document.getElementById('metric-gateway-paradise-conv');
     const metricGatewayClownPayConv = document.getElementById('metric-gateway-clownpay-conv');
+    const metricGatewayPingupagConv = document.getElementById('metric-gateway-pingupag-conv');
     const metricGatewayParadiseDetail = document.getElementById('metric-gateway-paradise-detail');
     const metricGatewayClownPayDetail = document.getElementById('metric-gateway-clownpay-detail');
+    const metricGatewayPingupagDetail = document.getElementById('metric-gateway-pingupag-detail');
     const metricGatewayAtomopayConv = document.getElementById('metric-gateway-atomopay-conv');
     const metricGatewayAtomopayDetail = document.getElementById('metric-gateway-atomopay-detail');
     const metricGatewayBravoPayConv = document.getElementById('metric-gateway-bravopay-conv');
@@ -4566,6 +4577,7 @@ function initAdmin() {
         sunize: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         paradise: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         clownpay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
+        pingupag: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         atomopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         bravopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 }
     });
@@ -4768,18 +4780,25 @@ function initAdmin() {
         gatewaySunizeApiSecret ||
         gatewayParadiseEnabled ||
         gatewayClownPayEnabled ||
+        gatewayPingupagEnabled ||
         gatewayParadiseBaseUrl ||
         gatewayClownPayBaseUrl ||
+        gatewayPingupagBaseUrl ||
         gatewayParadiseApiKey ||
         gatewayClownPayApiKey ||
+        gatewayPingupagApiKey ||
         gatewayParadiseProductHash ||
         gatewayClownPayProductHash ||
+        gatewayPingupagProductHash ||
         gatewayParadiseOrderbumpHash ||
         gatewayClownPayOrderbumpHash ||
+        gatewayPingupagOrderbumpHash ||
         gatewayParadiseSource ||
         gatewayClownPaySource ||
+        gatewayPingupagSource ||
         gatewayParadiseDescription ||
         gatewayClownPayDescription ||
+        gatewayPingupagDescription ||
         gatewayAtomopayEnabled ||
         gatewayAtomopayBaseUrl ||
         gatewayAtomopayApiToken ||
@@ -4814,6 +4833,7 @@ function initAdmin() {
         if (normalized === 'sunize') return 'sunize';
         if (normalized === 'paradise') return 'paradise';
         if (normalized === 'clownpay') return 'clownpay';
+        if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return 'ghostspay';
@@ -4825,6 +4845,7 @@ function initAdmin() {
         if (normalized === 'sunize') return 'sunize';
         if (normalized === 'paradise') return 'paradise';
         if (normalized === 'clownpay') return 'clownpay';
+        if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return '';
@@ -4836,12 +4857,13 @@ function initAdmin() {
         if (normalized === 'sunize') return 'Sunize';
         if (normalized === 'paradise') return 'Paradise';
         if (normalized === 'clownpay') return 'ClownPay';
+        if (normalized === 'pingupag') return 'PinguPag';
         if (normalized === 'atomopay') return 'AtomoPay';
         if (normalized === 'bravopay') return 'Bravo Pay';
         return 'GhostsPay';
     };
 
-    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'atomopay', 'bravopay'];
+    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'pingupag', 'atomopay', 'bravopay'];
 
     const normalizeGatewayOrderForUi = (value, fallback = 'ghostspay') => {
         const rawList = Array.isArray(value)
@@ -4881,6 +4903,7 @@ function initAdmin() {
         if (normalized === 'sunize') return gatewaySunizeEnabled;
         if (normalized === 'paradise') return gatewayParadiseEnabled;
         if (normalized === 'clownpay') return gatewayClownPayEnabled;
+        if (normalized === 'pingupag') return gatewayPingupagEnabled;
         if (normalized === 'atomopay') return gatewayAtomopayEnabled;
         if (normalized === 'bravopay') return gatewayBravoPayEnabled;
         return null;
@@ -4913,6 +4936,7 @@ function initAdmin() {
             sunize: { ...base.sunize, ...(source.sunize || {}) },
             paradise: { ...base.paradise, ...(source.paradise || {}) },
             clownpay: { ...base.clownpay, ...(source.clownpay || {}) },
+            pingupag: { ...base.pingupag, ...(source.pingupag || {}) },
             atomopay: { ...base.atomopay, ...(source.atomopay || {}) },
             bravopay: { ...base.bravopay, ...(source.bravopay || {}) }
         };
@@ -5115,6 +5139,7 @@ function initAdmin() {
         syncGatewaySwitchState(gatewaySunizeEnabled, gatewaySunizeState);
         syncGatewaySwitchState(gatewayParadiseEnabled, gatewayParadiseState);
         syncGatewaySwitchState(gatewayClownPayEnabled, gatewayClownPayState);
+        syncGatewaySwitchState(gatewayPingupagEnabled, gatewayPingupagState);
         syncGatewaySwitchState(gatewayAtomopayEnabled, gatewayAtomopayState);
         syncGatewaySwitchState(gatewayBravoPayEnabled, gatewayBravoPayState);
         syncGatewayOrderStates();
@@ -5338,6 +5363,7 @@ function initAdmin() {
             const sunize = gateways.sunize || {};
             const paradise = gateways.paradise || {};
             const clownpay = gateways.clownpay || {};
+            const pingupag = gateways.pingupag || {};
             const atomopay = gateways.atomopay || {};
             const bravopay = gateways.bravopay || {};
             const gatewayOrder = normalizeGatewayOrderForUi(payments.gatewayOrder || [], payments.activeGateway || 'ghostspay');
@@ -5368,6 +5394,13 @@ function initAdmin() {
             if (gatewayClownPaySource) gatewayClownPaySource.value = clownpay.source || '';
             if (gatewayParadiseDescription) gatewayParadiseDescription.value = paradise.description || '';
             if (gatewayClownPayDescription) gatewayClownPayDescription.value = clownpay.description || '';
+            if (gatewayPingupagEnabled) gatewayPingupagEnabled.checked = !!pingupag.enabled;
+            if (gatewayPingupagBaseUrl) gatewayPingupagBaseUrl.value = pingupag.baseUrl || '';
+            if (gatewayPingupagApiKey) gatewayPingupagApiKey.value = pingupag.apiKey || '';
+            if (gatewayPingupagProductHash) gatewayPingupagProductHash.value = pingupag.productHash || '';
+            if (gatewayPingupagOrderbumpHash) gatewayPingupagOrderbumpHash.value = pingupag.orderbumpHash || '';
+            if (gatewayPingupagSource) gatewayPingupagSource.value = pingupag.source || '';
+            if (gatewayPingupagDescription) gatewayPingupagDescription.value = pingupag.description || '';
             if (gatewayAtomopayEnabled) gatewayAtomopayEnabled.checked = !!atomopay.enabled;
             if (gatewayAtomopayBaseUrl) gatewayAtomopayBaseUrl.value = atomopay.baseUrl || '';
             if (gatewayAtomopayApiToken) gatewayAtomopayApiToken.value = atomopay.apiToken || '';
@@ -5560,6 +5593,7 @@ function initAdmin() {
         if (gatewayTestSunize) gatewayTestSunize.checked = gatewaySunizeEnabled?.checked === true;
         if (gatewayTestParadise) gatewayTestParadise.checked = gatewayParadiseEnabled?.checked === true;
         if (gatewayTestClownPay) gatewayTestClownPay.checked = gatewayClownPayEnabled?.checked === true;
+        if (gatewayTestPingupag) gatewayTestPingupag.checked = gatewayPingupagEnabled?.checked === true;
         if (gatewayTestAtomopay) gatewayTestAtomopay.checked = gatewayAtomopayEnabled?.checked === true;
         if (gatewayTestBravoPay) gatewayTestBravoPay.checked = gatewayBravoPayEnabled?.checked === true;
         if (gatewayTestAmount && !String(gatewayTestAmount.value || '').trim()) {
@@ -5573,6 +5607,7 @@ function initAdmin() {
         if (gatewayTestSunize?.checked) gateways.push('sunize');
         if (gatewayTestParadise?.checked) gateways.push('paradise');
         if (gatewayTestClownPay?.checked) gateways.push('clownpay');
+        if (gatewayTestPingupag?.checked) gateways.push('pingupag');
         if (gatewayTestAtomopay?.checked) gateways.push('atomopay');
         if (gatewayTestBravoPay?.checked) gateways.push('bravopay');
         return gateways;
@@ -6452,6 +6487,7 @@ function initAdmin() {
             const currentSunize = getCurrentGatewaySettings('sunize');
             const currentParadise = getCurrentGatewaySettings('paradise');
             const currentClownPay = getCurrentGatewaySettings('clownpay');
+            const currentPingupag = getCurrentGatewaySettings('pingupag');
             const currentAtomopay = getCurrentGatewaySettings('atomopay');
             const currentBravoPay = getCurrentGatewaySettings('bravopay');
             payload.payments = {
@@ -6495,6 +6531,16 @@ function initAdmin() {
                         orderbumpHash: readInputSetting(gatewayClownPayOrderbumpHash, currentClownPay.orderbumpHash),
                         source: readInputSetting(gatewayClownPaySource, currentClownPay.source),
                         description: readInputSetting(gatewayClownPayDescription, currentClownPay.description)
+                    },
+                    pingupag: {
+                        ...(currentSettings?.payments?.gateways?.pingupag || {}),
+                        enabled: readCheckboxSetting(gatewayPingupagEnabled, currentPingupag.enabled),
+                        baseUrl: readInputSetting(gatewayPingupagBaseUrl, currentPingupag.baseUrl),
+                        apiKey: readInputSetting(gatewayPingupagApiKey, currentPingupag.apiKey),
+                        productHash: readInputSetting(gatewayPingupagProductHash, currentPingupag.productHash),
+                        orderbumpHash: readInputSetting(gatewayPingupagOrderbumpHash, currentPingupag.orderbumpHash),
+                        source: readInputSetting(gatewayPingupagSource, currentPingupag.source),
+                        description: readInputSetting(gatewayPingupagDescription, currentPingupag.description)
                     },
                     atomopay: {
                         ...(currentSettings?.payments?.gateways?.atomopay || {}),
@@ -7558,12 +7604,14 @@ function initAdmin() {
         const sunizeStats = metrics.gatewayStats.sunize || { pix: 0, paid: 0 };
         const paradiseStats = metrics.gatewayStats.paradise || { pix: 0, paid: 0 };
         const clownpayStats = metrics.gatewayStats.clownpay || { pix: 0, paid: 0 };
+        const pingupagStats = metrics.gatewayStats.pingupag || { pix: 0, paid: 0 };
         const atomopayStats = metrics.gatewayStats.atomopay || { pix: 0, paid: 0 };
         const bravoPayStats = metrics.gatewayStats.bravopay || { pix: 0, paid: 0 };
         const ghostConv = ghostStats.pix ? Math.round((Number(ghostStats.paid || 0) / Number(ghostStats.pix || 0)) * 100) : 0;
         const sunizeConv = sunizeStats.pix ? Math.round((Number(sunizeStats.paid || 0) / Number(sunizeStats.pix || 0)) * 100) : 0;
         const paradiseConv = paradiseStats.pix ? Math.round((Number(paradiseStats.paid || 0) / Number(paradiseStats.pix || 0)) * 100) : 0;
         const clownpayConv = clownpayStats.pix ? Math.round((Number(clownpayStats.paid || 0) / Number(clownpayStats.pix || 0)) * 100) : 0;
+        const pingupagConv = pingupagStats.pix ? Math.round((Number(pingupagStats.paid || 0) / Number(pingupagStats.pix || 0)) * 100) : 0;
         const atomopayConv = atomopayStats.pix ? Math.round((Number(atomopayStats.paid || 0) / Number(atomopayStats.pix || 0)) * 100) : 0;
         const bravoPayConv = bravoPayStats.pix ? Math.round((Number(bravoPayStats.paid || 0) / Number(bravoPayStats.pix || 0)) * 100) : 0;
 
@@ -7576,9 +7624,13 @@ function initAdmin() {
             metricGatewaySunizeDetail.textContent = `${Number(sunizeStats.paid || 0)} pagos / ${Number(sunizeStats.pix || 0)} PIX`;
         }
         if (metricGatewayParadiseConv) metricGatewayParadiseConv.textContent = `${paradiseConv}%`;
+        if (metricGatewayPingupagConv) metricGatewayPingupagConv.textContent = `${pingupagConv}%`;
         if (metricGatewayClownPayConv) metricGatewayClownPayConv.textContent = `${clownpayConv}%`;
         if (metricGatewayParadiseDetail) {
             metricGatewayParadiseDetail.textContent = `${Number(paradiseStats.paid || 0)} pagos / ${Number(paradiseStats.pix || 0)} PIX`;
+        }
+        if (metricGatewayPingupagDetail) {
+            metricGatewayPingupagDetail.textContent = `${Number(pingupagStats.paid || 0)} pagos / ${Number(pingupagStats.pix || 0)} PIX`;
         }
         if (metricGatewayClownPayDetail) {
             metricGatewayClownPayDetail.textContent = `${Number(clownpayStats.paid || 0)} pagos / ${Number(clownpayStats.pix || 0)} PIX`;
@@ -7597,6 +7649,7 @@ function initAdmin() {
                 { label: 'GhostsPay', conv: ghostConv, paid: Number(ghostStats.paid || 0), pix: Number(ghostStats.pix || 0) },
                 { label: 'Sunize', conv: sunizeConv, paid: Number(sunizeStats.paid || 0), pix: Number(sunizeStats.pix || 0) },
                 { label: 'Paradise', conv: paradiseConv, paid: Number(paradiseStats.paid || 0), pix: Number(paradiseStats.pix || 0) },
+                { label: 'PinguPag', conv: pingupagConv, paid: Number(pingupagStats.paid || 0), pix: Number(pingupagStats.pix || 0) },
                 { label: 'ClownPay', conv: clownpayConv, paid: Number(clownpayStats.paid || 0), pix: Number(clownpayStats.pix || 0) },
                 { label: 'AtomoPay', conv: atomopayConv, paid: Number(atomopayStats.paid || 0), pix: Number(atomopayStats.pix || 0) },
                 { label: 'Bravo Pay', conv: bravoPayConv, paid: Number(bravoPayStats.paid || 0), pix: Number(bravoPayStats.pix || 0) }
@@ -8692,6 +8745,7 @@ function initAdmin() {
     gatewayGhostspayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewaySunizeEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayParadiseEnabled?.addEventListener('change', syncGatewaySwitches);
+    gatewayPingupagEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayClownPayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayAtomopayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayBravoPayEnabled?.addEventListener('change', syncGatewaySwitches);
