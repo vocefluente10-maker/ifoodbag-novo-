@@ -9,6 +9,7 @@ const { sendUtmfy } = require('./lib/utmfy');
 const { upsertPageview } = require('./lib/pageviews-store');
 const siteSessionHandler = require('./api/site/session');
 const siteConfigHandler = require('./api/site/config');
+const siteTrackingHandler = require('./api/site/tracking');
 const leadTrackHandler = require('./api/lead/track');
 const leadPageviewHandler = require('./api/lead/pageview');
 const pixCreateHandler = require('./api/pix/create');
@@ -43,6 +44,7 @@ app.post('/api/smsmais/webhook', (req, res) => smsMaisWebhookHandler(req, res));
 app.all('/api/admin/*', (req, res) => adminApiHandler(req, res));
 app.all('/api/site/session', (req, res) => siteSessionHandler(req, res));
 app.all('/api/site/config', (req, res) => siteConfigHandler(req, res));
+app.all('/api/site/tracking', (req, res) => siteTrackingHandler(req, res));
 app.all('/api/lead/track', (req, res) => leadTrackHandler(req, res));
 app.all('/api/lead/pageview', (req, res) => leadPageviewHandler(req, res));
 app.all('/api/security/clone-pixel', (req, res) => clonePixelHandler(req, res));
@@ -53,6 +55,10 @@ app.get('/', (_req, res) => {
 
 app.get('/admin', (_req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.get('/admin/entregaveis', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-entregaveis.html'));
 });
 
 app.get('/admin/tracking', (_req, res) => {
@@ -113,7 +119,8 @@ const funnelRoutes = {
     '/upsell-iof': 'upsell-iof.html',
     '/upsell-iof-antigo': 'upsell-iof-antigo.html',
     '/upsell-correios': 'upsell-correios.html',
-    '/upsell': 'upsell.html'
+    '/upsell': 'upsell.html',
+    '/rastreio': 'rastreio.html'
 };
 
 for (const [routePath, fileName] of Object.entries(funnelRoutes)) {

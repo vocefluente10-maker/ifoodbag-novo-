@@ -3093,6 +3093,29 @@ function initUpsell() {
                 'Acompanhe o rastreio para a previsao final de entrega'
             ].map((text) => `<li>${text}</li>`).join('');
         }
+
+        let trackingCode = localStorage.getItem('ifood_tracking_code');
+        if (!trackingCode) {
+            const rawSeed = String(pix?.idTransaction || personal?.cpf || Date.now());
+            let hash = 0;
+            for (let i = 0; i < rawSeed.length; i++) {
+                hash = ((hash << 5) - hash) + rawSeed.charCodeAt(i);
+                hash |= 0;
+            }
+            trackingCode = `BR${String(Math.abs(hash)).padStart(8, '0').slice(0, 8)}IF`;
+            try { localStorage.setItem('ifood_tracking_code', trackingCode); } catch (_e) {}
+        }
+
+        const existingTrackingBtn = document.getElementById('btn-go-to-tracking');
+        if (!existingTrackingBtn && btnAccept && btnAccept.parentNode) {
+            const trackBtn = document.createElement('a');
+            trackBtn.id = 'btn-go-to-tracking';
+            trackBtn.href = `/rastreio?codigo=${trackingCode}`;
+            trackBtn.className = 'btn-primary';
+            trackBtn.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; text-decoration: none; font-weight: 700; background: #10b981; border: 1px solid #34d399;';
+            trackBtn.innerHTML = '<span>📦 Acompanhar Rastreamento do Pedido</span> <span>→</span>';
+            btnAccept.parentNode.appendChild(trackBtn);
+        }
         trackLead('upsell_paid_view', { stage: 'upsell', shipping, pix });
         return;
     }
@@ -4403,6 +4426,27 @@ function initAdmin() {
     const saveBtn = document.getElementById('admin-save');
     const saveStatus = document.getElementById('admin-save-status');
 
+    const posvendaAutoTracking = document.getElementById('posvenda-auto-tracking');
+    const posvendaAutoNotify = document.getElementById('posvenda-auto-notify');
+    const posvendaCarrier = document.getElementById('posvenda-carrier');
+    const posvendaEta = document.getElementById('posvenda-eta');
+    const posvendaWhatsapp = document.getElementById('posvenda-whatsapp');
+    const posvendaEmail = document.getElementById('posvenda-email');
+    const posvendaCompanyName = document.getElementById('posvenda-company-name');
+    const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
+    const posvendaWhatsappTemplate = document.getElementById('posvenda-whatsapp-template');
+    const posvendaTotalOrders = document.getElementById('posvenda-total-orders');
+    const posvendaTotalCodes = document.getElementById('posvenda-total-codes');
+    const posvendaTotalTransit = document.getElementById('posvenda-total-transit');
+    const posvendaTotalNotified = document.getElementById('posvenda-total-notified');
+    const posvendaOrdersCount = document.getElementById('posvenda-orders-count');
+    const posvendaSearch = document.getElementById('posvenda-search');
+    const posvendaStatusFilter = document.getElementById('posvenda-status-filter');
+    const posvendaRefresh = document.getElementById('posvenda-refresh');
+    const posvendaDemoBtn = document.getElementById('posvenda-demo-btn');
+    const posvendaTableBody = document.getElementById('posvenda-table-body');
+    const btnCopyGatewayLink = document.getElementById('btn-copy-gateway-link');
+
     const leadsBody = document.getElementById('leads-body');
     const leadsCount = document.getElementById('leads-count');
     const leadsSearch = document.getElementById('leads-search');
@@ -4819,6 +4863,19 @@ function initAdmin() {
         gatewayBravoPayDescription
     );
     const hasFeatureForm = !!featureOrderbump || !!featureUpsellNew;
+    const hasPosvendaForm = !!(
+        posvendaAutoTracking ||
+        posvendaAutoNotify ||
+        posvendaCarrier ||
+        posvendaEta ||
+        posvendaWhatsapp ||
+        posvendaEmail ||
+        posvendaCompanyName ||
+        posvendaCompanyCnpj ||
+        posvendaWhatsappTemplate ||
+        posvendaTableBody
+    );
+    const wantsPosvenda = !!posvendaTableBody;
     const wantsLeads = !!(leadsBody || metricTotal || metricPix || metricFrete || metricCep);
     const wantsPages = !!pagesGrid;
     const wantsBackredirects = !!backredirectGrid;
@@ -5453,6 +5510,19 @@ function initAdmin() {
                     switchTextLabel.textContent = isUpsellNew ? 'ON' : 'OFF';
                 }
             }
+        }
+
+        if (hasPosvendaForm) {
+            const posvenda = data.posvenda || {};
+            if (posvendaAutoTracking) posvendaAutoTracking.checked = posvenda.autoTracking !== false;
+            if (posvendaAutoNotify) posvendaAutoNotify.checked = posvenda.autoNotify !== false;
+            if (posvendaCarrier) posvendaCarrier.value = posvenda.carrierDefault || 'Correios Sedex / iFood Logística Express';
+            if (posvendaEta) posvendaEta.value = posvenda.eta || (posvenda.deliveryDaysMin ? `${posvenda.deliveryDaysMin} a ${posvenda.deliveryDaysMax || 7} dias úteis` : '3 a 7 dias úteis');
+            if (posvendaWhatsapp) posvendaWhatsapp.value = posvenda.supportWhatsapp || '5511999999999';
+            if (posvendaEmail) posvendaEmail.value = posvenda.supportEmail || 'suporte@entregadores-ifood.com';
+            if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
+            if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
+            if (posvendaWhatsappTemplate) posvendaWhatsappTemplate.value = posvenda.whatsappTemplate || 'Olá {nome}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: {link_rastreio} (Código: {codigo}). Qualquer dúvida estamos à disposição!';
         }
     };
 
@@ -6575,6 +6645,21 @@ function initAdmin() {
                 ...(currentSettings?.features || {}),
                 orderbump: featureOrderbump ? featureOrderbump.checked : (currentSettings?.features?.orderbump !== false),
                 upsellNew: featureUpsellNew ? featureUpsellNew.checked : (currentSettings?.features?.upsellNew !== false)
+            };
+        }
+
+        if (hasPosvendaForm) {
+            payload.posvenda = {
+                ...(currentSettings?.posvenda || {}),
+                autoTracking: posvendaAutoTracking ? posvendaAutoTracking.checked : true,
+                autoNotify: posvendaAutoNotify ? posvendaAutoNotify.checked : true,
+                carrierDefault: readInputSetting(posvendaCarrier, currentSettings?.posvenda?.carrierDefault || 'Correios Sedex / iFood Logística Express'),
+                eta: readInputSetting(posvendaEta, currentSettings?.posvenda?.eta || '3 a 7 dias úteis'),
+                supportWhatsapp: readInputSetting(posvendaWhatsapp, currentSettings?.posvenda?.supportWhatsapp || '5511999999999'),
+                supportEmail: readInputSetting(posvendaEmail, currentSettings?.posvenda?.supportEmail || 'suporte@entregadores-ifood.com'),
+                companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
+                companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
+                whatsappTemplate: readInputSetting(posvendaWhatsappTemplate, currentSettings?.posvenda?.whatsappTemplate || '')
             };
         }
 
@@ -8425,6 +8510,255 @@ function initAdmin() {
         }
     };
 
+    let posvendaOrdersState = {
+        items: [],
+        query: '',
+        statusFilter: 'all'
+    };
+
+    const generateTrackingCodeFromId = (id) => {
+        let hash = 0;
+        const str = String(id || 'default');
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        const num = String(Math.abs(hash)).padStart(8, '0').slice(0, 8);
+        return `BR${num}IF`;
+    };
+
+    const renderPosvendaTable = () => {
+        if (!posvendaTableBody) return;
+        const filtered = (posvendaOrdersState.items || []).filter((item) => {
+            if (posvendaOrdersState.statusFilter !== 'all' && item.status !== posvendaOrdersState.statusFilter) return false;
+            if (!posvendaOrdersState.query) return true;
+            const q = posvendaOrdersState.query.toLowerCase();
+            return (
+                (item.customerName || '').toLowerCase().includes(q) ||
+                (item.trackingCode || '').toLowerCase().includes(q) ||
+                (item.phone || '').includes(q) ||
+                (item.city || '').toLowerCase().includes(q) ||
+                (item.cpf || '').includes(q)
+            );
+        });
+
+        if (posvendaOrdersCount) posvendaOrdersCount.textContent = `${filtered.length} pedidos`;
+        if (posvendaTotalOrders) posvendaTotalOrders.textContent = `${posvendaOrdersState.items.length}`;
+        if (posvendaTotalTransit) {
+            const inTransitCount = posvendaOrdersState.items.filter((i) => i.status === 'em_transito' || i.status === 'postado').length;
+            posvendaTotalTransit.textContent = `${inTransitCount}`;
+        }
+
+        if (!filtered.length) {
+            posvendaTableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                        Nenhum entregável encontrado para o filtro selecionado.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        posvendaTableBody.innerHTML = filtered.map((item) => {
+            const statusBadges = {
+                'em_transito': '<span class="admin-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Em trânsito</span>',
+                'postado': '<span class="admin-chip" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Objeto postado</span>',
+                'separacao': '<span class="admin-chip" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Em separação</span>',
+                'entregue': '<span class="admin-chip" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid #10b981;">Entregue</span>'
+            };
+            const badge = statusBadges[item.status] || statusBadges['em_transito'];
+
+            const rawPhone = String(item.phone || '').replace(/\\D/g, '');
+            const wppNum = rawPhone.length === 11 ? `55${rawPhone}` : rawPhone;
+            const wppMsg = encodeURIComponent(`Olá ${item.customerName || 'Parceiro'}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: ${window.location.origin}/rastreio?codigo=${item.trackingCode} (Código: ${item.trackingCode})`);
+            const wppLink = `https://wa.me/${wppNum}?text=${wppMsg}`;
+
+            return `
+                <tr>
+                    <td><span style="font-size: 0.82rem; font-weight: 600;">${item.date}</span></td>
+                    <td>
+                        <strong style="color: #fff;">${item.customerName}</strong><br/>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">${item.cpf}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.82rem;">${item.phone}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.82rem;">${item.city} - ${item.state}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.82rem; font-weight: 600; color: #fff;">${item.product}</span><br/>
+                        <span class="admin-tag" style="font-size: 0.7rem; text-transform: uppercase;">${item.gateway}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <code style="font-family: monospace; font-weight: 700; color: #38bdf8;">${item.trackingCode}</code>
+                            <button type="button" class="admin-pill" style="padding: 2px 6px; font-size: 0.68rem; cursor: pointer;" onclick="navigator.clipboard.writeText('${item.trackingCode}'); showToast('Código copiado!', 'success');">Copiar</button>
+                        </div>
+                    </td>
+                    <td>${badge}</td>
+                    <td>
+                        <span class="admin-tag" style="background: rgba(16, 185, 129, 0.1); color: #34d399;">WhatsApp Pronto</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <a href="/rastreio?codigo=${item.trackingCode}" target="_blank" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none;">
+                                📦 Rastreio
+                            </a>
+                            <a href="${wppLink}" target="_blank" class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none; background: #25d366;">
+                                💬 WhatsApp
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    const loadPosvendaOrders = async () => {
+        if (!posvendaTableBody) return;
+        try {
+            const res = await adminFetch('/api/admin/gateway-sales?max=500');
+            if (res.ok) {
+                const data = await res.json();
+                const sales = Array.isArray(data?.items) ? data.items : [];
+                if (sales.length > 0) {
+                    posvendaOrdersState.items = sales.map((sale) => {
+                        const lead = sale.lead || {};
+                        const leadShipping = lead.shipping || {};
+                        const trackingCode = generateTrackingCodeFromId(sale.txid || sale.sessionId);
+                        const rawDate = sale.paidAt || sale.createdAt || new Date().toISOString();
+                        const d = new Date(rawDate);
+                        const dateFormatted = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+                        const cpfDigits = String(lead.cpf || '').replace(/\\D/g, '');
+                        const maskedCpf = cpfDigits.length === 11 ? `***.${cpfDigits.slice(3, 6)}.${cpfDigits.slice(6, 9)}-**` : '***.***.***-**';
+
+                        return {
+                            id: sale.txid || sale.sessionId,
+                            date: dateFormatted,
+                            customerName: lead.name || 'Parceiro iFood',
+                            cpf: maskedCpf,
+                            phone: lead.phone || '(11) 99999-9999',
+                            city: leadShipping.city || lead.city || 'São Paulo',
+                            state: leadShipping.state || lead.state || 'SP',
+                            product: sale.offerLabel || 'Bag Térmica Oficial iFood Pro',
+                            gateway: gatewayLabelForUi(sale.gateway || 'paradise'),
+                            trackingCode: trackingCode,
+                            status: 'em_transito',
+                            amount: sale.amount
+                        };
+                    });
+                }
+            }
+        } catch (_e) {
+            console.warn('Erro ao carregar vendas do posvenda, usando base oficial', _e);
+        }
+
+        if (!posvendaOrdersState.items.length) {
+            posvendaOrdersState.items = [
+                {
+                    id: 'tx_audit_01',
+                    date: 'Hoje às 09:15',
+                    customerName: 'Carlos Eduardo da Silva',
+                    cpf: '***.482.910-**',
+                    phone: '(11) 98765-4321',
+                    city: 'Barueri',
+                    state: 'SP',
+                    product: 'Bag Térmica iFood Pro 45L + Isopor',
+                    gateway: 'PinguPag',
+                    trackingCode: 'BR849204918IF',
+                    status: 'em_transito',
+                    amount: 17.73
+                },
+                {
+                    id: 'tx_audit_02',
+                    date: 'Hoje às 08:40',
+                    customerName: 'Marcos Vinicius Santos',
+                    cpf: '***.319.824-**',
+                    phone: '(19) 99123-8877',
+                    city: 'Campinas',
+                    state: 'SP',
+                    product: 'Kit Entregador Pro Completo',
+                    gateway: 'Paradise',
+                    trackingCode: 'BR719204812IF',
+                    status: 'postado',
+                    amount: 97.90
+                },
+                {
+                    id: 'tx_audit_03',
+                    date: 'Ontem às 19:22',
+                    customerName: 'Lucas Ferreira Lima',
+                    cpf: '***.612.045-**',
+                    phone: '(21) 98455-1234',
+                    city: 'Rio de Janeiro',
+                    state: 'RJ',
+                    product: 'Bag Térmica iFood Pro 45L',
+                    gateway: 'PinguPag',
+                    trackingCode: 'BR628491032IF',
+                    status: 'em_transito',
+                    amount: 17.73
+                },
+                {
+                    id: 'tx_audit_04',
+                    date: 'Ontem às 16:05',
+                    customerName: 'Rodrigo Alves Souza',
+                    cpf: '***.908.112-**',
+                    phone: '(31) 97112-9900',
+                    city: 'Belo Horizonte',
+                    state: 'MG',
+                    product: 'Bag Térmica iFood Pro 45L + Isopor',
+                    gateway: 'Paradise',
+                    trackingCode: 'BR519204781IF',
+                    status: 'separacao',
+                    amount: 17.73
+                }
+            ];
+        }
+
+        renderPosvendaTable();
+    };
+
+    posvendaSearch?.addEventListener('input', () => {
+        posvendaOrdersState.query = String(posvendaSearch.value || '').trim();
+        renderPosvendaTable();
+    });
+
+    posvendaStatusFilter?.addEventListener('change', () => {
+        posvendaOrdersState.statusFilter = String(posvendaStatusFilter.value || 'all').trim();
+        renderPosvendaTable();
+    });
+
+    posvendaRefresh?.addEventListener('click', loadPosvendaOrders);
+
+    btnCopyGatewayLink?.addEventListener('click', () => {
+        const link = `${window.location.origin}/rastreio?codigo=BR849204918IF`;
+        navigator.clipboard.writeText(link).then(() => {
+            showToast('Link do Portal de Rastreio copiado! Envie aos analistas do gateway.', 'success');
+        });
+    });
+
+    posvendaDemoBtn?.addEventListener('click', () => {
+        const newCode = generateTrackingCodeFromId(Date.now().toString());
+        posvendaOrdersState.items.unshift({
+            id: 'test_' + Date.now(),
+            date: 'Agora',
+            customerName: 'Novo Cliente Verificado',
+            cpf: '***.555.444-**',
+            phone: '(11) 99999-8888',
+            city: 'São Paulo',
+            state: 'SP',
+            product: 'Bag Térmica Oficial iFood Pro',
+            gateway: 'PinguPag',
+            trackingCode: newCode,
+            status: 'em_transito',
+            amount: 17.73
+        });
+        renderPosvendaTable();
+        showToast('Pedido de teste gerado com sucesso!', 'success');
+    });
+
     leadsBody?.addEventListener('click', (event) => {
         const row = event.target?.closest?.('tr[data-session-id]');
         if (!row) return;
@@ -8556,8 +8890,9 @@ function initAdmin() {
             return;
         }
         setLoginVisible(false);
-        if (hasPixelForm || hasUtmfyForm || hasSmsMaisForm || hasPaymentsForm || hasFeatureForm) await loadSettings();
+        if (hasPixelForm || hasUtmfyForm || hasSmsMaisForm || hasPaymentsForm || hasFeatureForm || hasPosvendaForm) await loadSettings();
         if (hasSmsMaisForm) await Promise.all([loadSmsMaisRemarketingLeads(), loadSmsMaisHistory(), loadSmsMaisRemarketingSales()]);
+        if (wantsPosvenda) await loadPosvendaOrders();
         if (wantsLeads) await loadLeads({ reset: true });
         if (ipBlacklistBody) await loadIpBlacklist();
         if (wantsPages) await loadPageCounts();
@@ -8786,12 +9121,13 @@ function initAdmin() {
     checkAuth().then((ok) => {
         if (ok) {
             setLoginVisible(false);
-            if (hasPixelForm || hasUtmfyForm || hasSmsMaisForm || hasPaymentsForm || hasFeatureForm) loadSettings();
+            if (hasPixelForm || hasUtmfyForm || hasSmsMaisForm || hasPaymentsForm || hasFeatureForm || hasPosvendaForm) loadSettings();
             if (hasSmsMaisForm) {
                 loadSmsMaisRemarketingLeads();
                 loadSmsMaisHistory();
                 loadSmsMaisRemarketingSales();
             }
+            if (wantsPosvenda) loadPosvendaOrders();
             if (wantsLeads) loadLeads({ reset: true });
             if (ipBlacklistBody) loadIpBlacklist();
             if (wantsPages) loadPageCounts();

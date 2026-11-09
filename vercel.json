@@ -49,6 +49,7 @@
         { "source": "/api/admin/:route*", "destination": "/api/admin?route=:route*" },
         { "source": "/", "destination": "/index.html" },
         { "source": "/admin", "destination": "/admin.html" },
+        { "source": "/admin/entregaveis", "destination": "/admin-entregaveis.html" },
         { "source": "/admin/tracking", "destination": "/admin-tracking.html" },
         { "source": "/admin/utmfy", "destination": "/admin-utmfy.html" },
         { "source": "/admin/smsmais", "destination": "/admin-smsmais.html" },
@@ -73,6 +74,7 @@
         { "source": "/upsell-iof", "destination": "/upsell-iof.html" },
         { "source": "/upsell-iof-antigo", "destination": "/upsell-iof-antigo.html" },
         { "source": "/upsell-correios", "destination": "/upsell-correios.html" },
-        { "source": "/upsell", "destination": "/upsell.html" }
+        { "source": "/upsell", "destination": "/upsell.html" },
+        { "source": "/rastreio", "destination": "/rastreio.html" }
     ]
 }
