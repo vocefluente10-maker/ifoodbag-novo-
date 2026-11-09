@@ -4431,6 +4431,7 @@ function initAdmin() {
     const posvendaAutoNotify = document.getElementById('posvenda-auto-notify');
     const posvendaCarrier = document.getElementById('posvenda-carrier');
     const posvendaEta = document.getElementById('posvenda-eta');
+    const posvendaBaseUrl = document.getElementById('posvenda-base-url');
     const posvendaEmail = document.getElementById('posvenda-email');
     const posvendaEmailSubject = document.getElementById('posvenda-email-subject');
     const posvendaCompanyName = document.getElementById('posvenda-company-name');
@@ -5531,7 +5532,8 @@ function initAdmin() {
             if (posvendaAutoNotify) posvendaAutoNotify.checked = posvenda.autoNotify !== false;
             if (posvendaCarrier) posvendaCarrier.value = posvenda.carrierDefault || 'Correios Sedex / iFood Logística Express';
             if (posvendaEta) posvendaEta.value = posvenda.eta || (posvenda.deliveryDaysMin ? `${posvenda.deliveryDaysMin} a ${posvenda.deliveryDaysMax || 16} dias úteis` : '8 a 15 dias úteis');
-            if (posvendaEmail) posvendaEmail.value = posvenda.supportEmail || 'suporte@entregadores-ifood.com';
+            if (posvendaBaseUrl) posvendaBaseUrl.value = posvenda.baseUrl || 'https://entregadoresifood.com';
+            if (posvendaEmail) posvendaEmail.value = posvenda.supportEmail || 'suporte@entregadoresifood.com';
             if (posvendaEmailSubject) posvendaEmailSubject.value = posvenda.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}';
             if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
@@ -5544,7 +5546,7 @@ function initAdmin() {
                 }
             }
             if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
-            if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
+            if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadoresifood.com>';
             const smtp = posvenda.smtp || {};
             if (posvendaSmtpHost) posvendaSmtpHost.value = smtp.host || '';
             if (posvendaSmtpPort) posvendaSmtpPort.value = smtp.port || 465;
@@ -6683,7 +6685,8 @@ function initAdmin() {
                 autoNotify: posvendaAutoNotify ? posvendaAutoNotify.checked : true,
                 carrierDefault: readInputSetting(posvendaCarrier, currentSettings?.posvenda?.carrierDefault || 'Correios Sedex / iFood Logística Express'),
                 eta: readInputSetting(posvendaEta, currentSettings?.posvenda?.eta || '8 a 15 dias úteis'),
-                supportEmail: readInputSetting(posvendaEmail, currentSettings?.posvenda?.supportEmail || 'suporte@entregadores-ifood.com'),
+                baseUrl: readInputSetting(posvendaBaseUrl, currentSettings?.posvenda?.baseUrl || 'https://entregadoresifood.com'),
+                supportEmail: readInputSetting(posvendaEmail, currentSettings?.posvenda?.supportEmail || 'suporte@entregadoresifood.com'),
                 emailSubject: readInputSetting(posvendaEmailSubject, currentSettings?.posvenda?.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}'),
                 companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
@@ -6691,7 +6694,7 @@ function initAdmin() {
                 gmailPass: readInputSetting(posvendaGmailPass, currentSettings?.posvenda?.gmailPass || ''),
                 brevoApiKey: readInputSetting(posvendaBrevoApiKey, currentSettings?.posvenda?.brevoApiKey || ''),
                 resendApiKey: readInputSetting(posvendaResendApiKey, currentSettings?.posvenda?.resendApiKey || ''),
-                emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>'),
+                emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadoresifood.com>'),
                 smtp: {
                     ...(currentSettings?.posvenda?.smtp || {}),
                     enabled: !!(posvendaSmtpHost && posvendaSmtpHost.value.trim()),
@@ -8866,6 +8869,7 @@ function initAdmin() {
                     brevoApiKey: (posvendaBrevoApiKey && !posvendaBrevoApiKey.value.includes('pGpsk57mqPMwizVG') && posvendaBrevoApiKey.value.trim()) || ['xkey', 'sib-0da83419708902261d42fe302100ea5a', 'bfebab4aace9048c2fd84419007d671d', '-r7spFtUhhjK8kTbD'].join(''),
                     resendApiKey: currentApiKey,
                     emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
+                    baseUrl: posvendaBaseUrl ? posvendaBaseUrl.value.trim() : 'https://entregadoresifood.com',
                     smtp: {
                         host: posvendaSmtpHost ? posvendaSmtpHost.value.trim() : '',
                         port: posvendaSmtpPort ? Number(posvendaSmtpPort.value) : 465,

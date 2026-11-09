@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
         carrierDefault: 'Correios Sedex / iFood Logística Express',
         deliveryDaysMin: 8,
         deliveryDaysMax: 16,
-        supportEmail: 'suporte@entregadores-ifood.com',
+        supportEmail: 'suporte@entregadoresifood.com',
         companyName: 'iFood Logística & Distribuição Brasil Ltda',
         companyCnpj: '14.380.200/0001-21'
     };
@@ -249,7 +249,7 @@ module.exports = async (req, res) => {
         company: {
             name: posvendaConfig.companyName || 'iFood Logística & Distribuição Brasil Ltda',
             cnpj: posvendaConfig.companyCnpj || '14.380.200/0001-21',
-            supportEmail: posvendaConfig.supportEmail || 'suporte@entregadores-ifood.com'
+            supportEmail: posvendaConfig.supportEmail || 'suporte@entregadoresifood.com'
         },
         nfe: {
             number: `00${(numSeed % 80000 + 10000)}`,
