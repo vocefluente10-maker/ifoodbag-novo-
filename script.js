@@ -4435,6 +4435,9 @@ function initAdmin() {
     const posvendaEmailSubject = document.getElementById('posvenda-email-subject');
     const posvendaCompanyName = document.getElementById('posvenda-company-name');
     const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
+    const posvendaResendApiKey = document.getElementById('posvenda-resend-api-key');
+    const posvendaEmailFrom = document.getElementById('posvenda-email-from');
+    const posvendaTestEmailBtn = document.getElementById('posvenda-test-email-btn');
     const posvendaEmailTemplate = document.getElementById('posvenda-email-template');
     const posvendaTotalOrders = document.getElementById('posvenda-total-orders');
     const posvendaTotalCodes = document.getElementById('posvenda-total-codes');
@@ -4873,6 +4876,8 @@ function initAdmin() {
         posvendaEmailSubject ||
         posvendaCompanyName ||
         posvendaCompanyCnpj ||
+        posvendaResendApiKey ||
+        posvendaEmailFrom ||
         posvendaEmailTemplate ||
         posvendaTableBody
     );
@@ -5523,6 +5528,8 @@ function initAdmin() {
             if (posvendaEmailSubject) posvendaEmailSubject.value = posvenda.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}';
             if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
+            if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
+            if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
             if (posvendaEmailTemplate) posvendaEmailTemplate.value = posvenda.emailTemplate || 'Olá {nome}! Seu pedido do Kit Entregador iFood foi integrado ao lote logístico de expedição. 📦 Código de rastreamento oficial: {codigo}. Acompanhe seu envio pelo portal oficial: {link_rastreio}. Prazo operacional estimado: 8 a 15 dias úteis. Qualquer dúvida, responda diretamente a este e-mail.';
         }
     };
@@ -6660,6 +6667,8 @@ function initAdmin() {
                 emailSubject: readInputSetting(posvendaEmailSubject, currentSettings?.posvenda?.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}'),
                 companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
+                resendApiKey: readInputSetting(posvendaResendApiKey, currentSettings?.posvenda?.resendApiKey || ''),
+                emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>'),
                 emailTemplate: readInputSetting(posvendaEmailTemplate, currentSettings?.posvenda?.emailTemplate || '')
             };
         }
@@ -8599,18 +8608,45 @@ function initAdmin() {
                         <span class="admin-tag" style="background: rgba(37, 99, 235, 0.1); color: #38bdf8; font-weight: 600;">Enviado por E-mail</span>
                     </td>
                     <td>
-                        <div style="display: flex; gap: 6px;">
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <a href="${trackingUrl}" target="_blank" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none;">
                                 📦 Rastreio
                             </a>
-                            <a href="${mailtoLink}" class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none; background: #2563eb;">
-                                ✉️ E-mail
+                            <button type="button" class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; background: #059669; border: none; border-radius: 4px; cursor: pointer; color: #fff;" onclick="window.resendPosvendaEmail('${item.sessionId || item.id}', '${item.email}')">
+                                ⚡ Disparar E-mail
+                            </button>
+                            <a href="${mailtoLink}" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none;">
+                                ✉️ Manual
                             </a>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
+    };
+
+    window.resendPosvendaEmail = async function(sessionId, email) {
+        if (!sessionId) {
+            showToast('ID do pedido não identificado', 'error');
+            return;
+        }
+        const confirmed = confirm(`Deseja disparar o e-mail de rastreio oficial para ${email || 'o lead'} agora?`);
+        if (!confirmed) return;
+        showToast('Enviando e-mail de rastreio...', 'info');
+        try {
+            const res = await adminFetch('/api/admin/posvenda-resend-email', {
+                method: 'POST',
+                body: JSON.stringify({ session_id: sessionId })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.ok) {
+                showToast('E-mail de rastreio enviado com sucesso!', 'success');
+            } else {
+                showToast(`Erro ao enviar: ${data.error || 'Falha no servidor'}`, 'error');
+            }
+        } catch (err) {
+            showToast('Erro de conexão: ' + err.message, 'error');
+        }
     };
 
     const loadPosvendaOrders = async () => {
@@ -8639,6 +8675,7 @@ function initAdmin() {
 
                         return {
                             id: sale.txid || sale.sessionId,
+                            sessionId: sale.sessionId || sale.txid,
                             date: dateFormatted,
                             customerName: lead.name || 'Parceiro iFood',
                             cpf: maskedCpf,
@@ -8765,6 +8802,43 @@ function initAdmin() {
         });
         renderPosvendaTable();
         showToast('Pedido de teste gerado com sucesso!', 'success');
+    });
+
+    posvendaTestEmailBtn?.addEventListener('click', async () => {
+        const testEmail = prompt('Digite o e-mail de destino para o teste do entregável:', 'seu-email@gmail.com');
+        if (!testEmail || !testEmail.includes('@')) {
+            if (testEmail !== null) showToast('Informe um e-mail válido.', 'error');
+            return;
+        }
+
+        const productChoice = prompt('Qual produto deseja testar no e-mail? Digite: bag, bau ou kit', 'bag');
+        const prod = (productChoice || 'bag').toLowerCase().trim();
+
+        posvendaTestEmailBtn.disabled = true;
+        posvendaTestEmailBtn.textContent = 'Enviando teste...';
+        showToast('Disparando e-mail de teste...', 'info');
+
+        try {
+            const res = await adminFetch('/api/admin/posvenda-test-email', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: testEmail,
+                    product: prod,
+                    name: 'Entregador de Teste'
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.ok) {
+                showToast(`E-mail enviado com sucesso para ${testEmail}!`, 'success');
+            } else {
+                showToast(`Erro no envio: ${data.error || 'Falha ao processar'}`, 'error');
+            }
+        } catch (err) {
+            showToast('Erro de requisição: ' + err.message, 'error');
+        } finally {
+            posvendaTestEmailBtn.disabled = false;
+            posvendaTestEmailBtn.textContent = '✉️ Testar Disparo de E-mail';
+        }
     });
 
     leadsBody?.addEventListener('click', (event) => {

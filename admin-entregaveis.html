@@ -174,11 +174,30 @@
               <input type="text" id="posvenda-company-cnpj" class="floating-input" placeholder=" " value="14.380.200/0001-21" />
               <label for="posvenda-company-cnpj" class="floating-label">CNPJ da Empresa</label>
             </div>
+
+            <div class="input-group">
+              <input type="password" id="posvenda-resend-api-key" class="floating-input" placeholder=" " autocomplete="new-password" />
+              <label for="posvenda-resend-api-key" class="floating-label">Chave de API Resend (Bearer Token: re_...)</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-email-from" class="floating-input" placeholder=" " value="iFood Entregadores <rastreio@entregadores-ifood.com>" />
+              <label for="posvenda-email-from" class="floating-label">Remetente Oficial (From)</label>
+            </div>
           </div>
 
           <div class="input-group" style="margin-top: 14px;">
             <textarea id="posvenda-email-template" class="floating-input" style="min-height: 90px; padding-top: 18px;" placeholder=" ">Olá {nome}! Seu pedido do Kit Entregador iFood foi integrado ao lote logístico de expedição. 📦 Código de rastreamento oficial: {codigo}. Acompanhe seu envio pelo portal oficial: {link_rastreio}. Prazo operacional estimado: 8 a 15 dias úteis. Qualquer dúvida, responda diretamente a este e-mail.</textarea>
             <label for="posvenda-email-template" class="floating-label">Template do E-mail de Notificação ({nome}, {codigo}, {link_rastreio})</label>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+            <button id="admin-save" class="btn-primary" type="button" style="background: #ea1d2c; font-weight: 700; padding: 12px 24px;">
+              💾 Salvar Configurações
+            </button>
+            <button id="posvenda-test-email-btn" class="btn-secondary" type="button" style="padding: 12px 20px; font-weight: 600;">
+              ✉️ Testar Disparo de E-mail
+            </button>
           </div>
         </section>
 

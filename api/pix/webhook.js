@@ -13,6 +13,7 @@ const {
 const { verifyWebhookSignature: verifyBravoPayWebhookSignature } = require('../../lib/bravopay-provider');
 const { getPaymentsConfig } = require('../../lib/payments-config-store');
 const { getSettings } = require('../../lib/settings-store');
+const { sendPostSaleDeliveryEmail } = require('../../lib/email-sender');
 const { buildPurchaseDispatchJobs } = require('../../lib/meta-capi');
 const {
     getGhostspayTxid,
@@ -1422,6 +1423,16 @@ const pixWebhookHandler = async (req, res) => {
             if (pixelResults.some((item) => item?.ok || item?.fallback)) {
                 shouldProcessQueue = true;
             }
+        }
+
+        // Automatic Post-Sale Delivery Email Dispatch (Front-end: Bag, Baú ou Kit)
+        if (!upsellEvent && leadData) {
+            sendPostSaleDeliveryEmail(leadData, {
+                txid: effectiveTxid,
+                amount: eventAmount,
+                reward: rewardSnapshot,
+                offerLabel: 'front'
+            }).catch((err) => console.error('Erro ao disparar email de pos-venda:', err));
         }
     }
 
