@@ -49,10 +49,13 @@
       <header class="admin-topbar">
         <div>
           <h1>Entregáveis & Rastreio (Pós-Venda)</h1>
-          <p>Controle do fluxo de entrega, códigos de rastreamento, emissão de comprovantes e compliance oficial para gateways.</p>
+          <p>Controle do fluxo de entrega, envio de códigos por e-mail, prazos operacionais e compliance oficial para gateways.</p>
         </div>
-        <div class="admin-topbar-actions">
-          <button id="admin-save" class="btn-primary" type="button">Salvar configurações</button>
+        <div class="admin-topbar-actions" style="display: flex; gap: 10px; align-items: center;">
+          <a href="/rastreio" target="_blank" class="btn-primary" style="background: #ea1d2c; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem;">
+            <span>🌐 Acessar Portal de Rastreio (/rastreio) ↗</span>
+          </a>
+          <button id="admin-save" class="btn-secondary" type="button">Salvar configurações</button>
           <span id="admin-save-status" class="admin-muted"></span>
         </div>
       </header>
@@ -83,13 +86,14 @@
               <p>Este entregável atende a todos os requisitos de compliance exigidos pelos gateways parceiros (Paradise, PinguPag, GhostsPay): código de rastreamento no padrão oficial, linha do tempo em tempo real, transportadora parceira, nota fiscal vinculada e canais diretos de suporte.</p>
               <div class="admin-hero-tags">
                 <span class="admin-tag">Portal de Rastreio: <strong>/rastreio</strong></span>
-                <span class="admin-tag">Garantia Legal: <strong>90 dias (CDC)</strong></span>
+                <span class="admin-tag">Prazo Operacional: <strong>8 a 15 dias úteis</strong></span>
+                <span class="admin-tag">Entrega do Código: <strong>E-mail Oficial</strong></span>
                 <span class="admin-tag">NF-e Integrada: <strong>Sim (DANFE)</strong></span>
               </div>
             </div>
             <div class="admin-hero-highlight" style="display: flex; flex-direction: column; gap: 8px;">
-              <a href="/rastreio" target="_blank" class="btn-primary" style="text-decoration: none; text-align: center; font-size: 0.9rem;">
-                Abrir Portal do Cliente ↗
+              <a href="/rastreio" target="_blank" class="btn-primary" style="text-decoration: none; text-align: center; font-size: 0.9rem; background: #ea1d2c;">
+                Abrir Portal de Rastreio ↗
               </a>
               <button type="button" id="btn-copy-gateway-link" class="btn-secondary" style="font-size: 0.85rem;">
                 Copiar Link para o Gateway 📋
@@ -110,14 +114,14 @@
               <span class="admin-kpi-meta">Geração automática ativa</span>
             </div>
             <div class="admin-kpi-card">
-              <span class="admin-kpi-label">Em Trânsito / Entrega</span>
-              <strong class="admin-kpi-value" id="posvenda-total-transit">0</strong>
-              <span class="admin-kpi-meta">Despachados no CD</span>
+              <span class="admin-kpi-label">Prazo Padrão</span>
+              <strong class="admin-kpi-value" id="posvenda-total-transit" style="color: #f59e0b;">8-15d</strong>
+              <span class="admin-kpi-meta">Em transferência no CD</span>
             </div>
             <div class="admin-kpi-card">
-              <span class="admin-kpi-label">Notificação Pós-Venda</span>
-              <strong class="admin-kpi-value" id="posvenda-total-notified" style="color: #38bdf8;">Ativo</strong>
-              <span class="admin-kpi-meta">WhatsApp & E-mail</span>
+              <span class="admin-kpi-label">Notificação do Código</span>
+              <strong class="admin-kpi-value" id="posvenda-total-notified" style="color: #38bdf8;">E-mail</strong>
+              <span class="admin-kpi-meta">Disparo oficial ativo</span>
             </div>
           </div>
         </section>
@@ -126,9 +130,9 @@
         <section class="admin-section admin-section--card">
           <div class="admin-section-header">
             <h2>Configurações do Pós-Venda & Rastreamento</h2>
-            <span class="admin-chip">Dados da Empresa</span>
+            <span class="admin-chip">Dados da Empresa & E-mail</span>
           </div>
-          <p class="admin-hint">Personalize os dados exibidos na página de rastreio oficial e na mensagem de envio ao cliente.</p>
+          <p class="admin-hint">Configure o prazo de entrega estendido (mínimo de 8 a 15 dias úteis) e o template do e-mail oficial de envio do código.</p>
 
           <div class="admin-grid">
             <label class="admin-switch">
@@ -138,7 +142,7 @@
 
             <label class="admin-switch">
               <input type="checkbox" id="posvenda-auto-notify" checked />
-              <span>Notificação de pós-venda ativa</span>
+              <span>Envio de código de rastreamento por e-mail ativo</span>
             </label>
 
             <div class="input-group">
@@ -147,18 +151,18 @@
             </div>
 
             <div class="input-group">
-              <input type="text" id="posvenda-eta" class="floating-input" placeholder=" " value="3 a 7 dias úteis" />
-              <label for="posvenda-eta" class="floating-label">Prazo Médio de Entrega</label>
-            </div>
-
-            <div class="input-group">
-              <input type="text" id="posvenda-whatsapp" class="floating-input" placeholder=" " value="5511999999999" />
-              <label for="posvenda-whatsapp" class="floating-label">WhatsApp Oficial de Suporte (com DDD)</label>
+              <input type="text" id="posvenda-eta" class="floating-input" placeholder=" " value="8 a 15 dias úteis" />
+              <label for="posvenda-eta" class="floating-label">Prazo Médio de Entrega (Enrolar 7+ dias)</label>
             </div>
 
             <div class="input-group">
               <input type="text" id="posvenda-email" class="floating-input" placeholder=" " value="suporte@entregadores-ifood.com" />
-              <label for="posvenda-email" class="floating-label">E-mail Oficial de Suporte</label>
+              <label for="posvenda-email" class="floating-label">E-mail Oficial de Atendimento</label>
+            </div>
+
+            <div class="input-group">
+              <input type="text" id="posvenda-email-subject" class="floating-input" placeholder=" " value="Seu pedido iFood Entregadores foi despachado! Código: {codigo}" />
+              <label for="posvenda-email-subject" class="floating-label">Assunto do E-mail de Envio</label>
             </div>
 
             <div class="input-group">
@@ -173,8 +177,8 @@
           </div>
 
           <div class="input-group" style="margin-top: 14px;">
-            <textarea id="posvenda-whatsapp-template" class="floating-input" style="min-height: 90px; padding-top: 18px;" placeholder=" ">Olá {nome}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: {link_rastreio} (Código: {codigo}). Qualquer dúvida estamos à disposição!</textarea>
-            <label for="posvenda-whatsapp-template" class="floating-label">Template da Mensagem no WhatsApp ({nome}, {codigo}, {link_rastreio})</label>
+            <textarea id="posvenda-email-template" class="floating-input" style="min-height: 90px; padding-top: 18px;" placeholder=" ">Olá {nome}! Seu pedido do Kit Entregador iFood foi integrado ao lote logístico de expedição. 📦 Código de rastreamento oficial: {codigo}. Acompanhe seu envio pelo portal oficial: {link_rastreio}. Prazo operacional estimado: 8 a 15 dias úteis. Qualquer dúvida, responda diretamente a este e-mail.</textarea>
+            <label for="posvenda-email-template" class="floating-label">Template do E-mail de Notificação ({nome}, {codigo}, {link_rastreio})</label>
           </div>
         </section>
 
@@ -186,10 +190,10 @@
           </div>
 
           <div class="admin-toolbar">
-            <input type="text" id="posvenda-search" placeholder="Buscar por cliente, CPF, telefone, código de rastreio ou cidade..." />
+            <input type="text" id="posvenda-search" placeholder="Buscar por cliente, CPF, e-mail, código de rastreio ou cidade..." />
             <select id="posvenda-status-filter" class="admin-toolbar-select">
               <option value="all">Status: Todos</option>
-              <option value="em_transito">Status: Em trânsito</option>
+              <option value="em_transferencia">Status: Em transferência (8-15d)</option>
               <option value="postado">Status: Objeto postado</option>
               <option value="separacao">Status: Em separação</option>
               <option value="entregue">Status: Entregue</option>
@@ -204,12 +208,12 @@
                 <tr>
                   <th>Data/Hora</th>
                   <th>Cliente</th>
-                  <th>Contato</th>
+                  <th>E-mail do Lead</th>
                   <th>Destino</th>
-                  <th>Produto & Gateway</th>
+                  <th>Item Escolhido & Gateway</th>
                   <th>Código de Rastreio</th>
                   <th>Status Entrega</th>
-                  <th>Pós-Venda</th>
+                  <th>Notificação</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -230,6 +234,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/script.js?v=11.1" defer></script>
+  <script src="/script.js?v=11.2" defer></script>
 </body>
 </html>

