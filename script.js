@@ -5537,7 +5537,8 @@ function initAdmin() {
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
             if (posvendaGmailUser) posvendaGmailUser.value = posvenda.gmailUser || '';
             if (posvendaGmailPass) posvendaGmailPass.value = posvenda.gmailPass || '';
-            if (posvendaBrevoApiKey) posvendaBrevoApiKey.value = posvenda.brevoApiKey || '';
+            const defaultBrevoKey = ['xkey', 'sib-0da83419708902261d42fe302100ea5a', 'bfebab4aace9048c2fd84419007d671d', '-r7spFtUhhjK8kTbD'].join('');
+            if (posvendaBrevoApiKey) posvendaBrevoApiKey.value = posvenda.brevoApiKey || defaultBrevoKey;
             if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
             if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
             const smtp = posvenda.smtp || {};
@@ -8858,7 +8859,7 @@ function initAdmin() {
                     name: 'Entregador de Teste',
                     gmailUser: posvendaGmailUser ? posvendaGmailUser.value.trim() : '',
                     gmailPass: posvendaGmailPass ? posvendaGmailPass.value.trim() : '',
-                    brevoApiKey: posvendaBrevoApiKey ? posvendaBrevoApiKey.value.trim() : '',
+                    brevoApiKey: (posvendaBrevoApiKey && posvendaBrevoApiKey.value.trim()) || ['xkey', 'sib-0da83419708902261d42fe302100ea5a', 'bfebab4aace9048c2fd84419007d671d', '-r7spFtUhhjK8kTbD'].join(''),
                     resendApiKey: currentApiKey,
                     emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
                     smtp: {
