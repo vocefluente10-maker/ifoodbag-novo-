@@ -175,9 +175,14 @@
             </p>
 
             <div class="admin-grid">
-              <div class="input-group" style="grid-column: 1 / -1;">
-                <input type="text" id="posvenda-brevo-api-key" class="floating-input" style="height: 56px; font-family: monospace;" placeholder=" " autocomplete="off" spellcheck="false" />
-                <label for="posvenda-brevo-api-key" class="floating-label">Chave de API Brevo (xkeysib-...)</label>
+              <div class="input-group" style="grid-column: 1 / -1; display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; position: relative;">
+                  <input type="text" id="posvenda-brevo-api-key" class="floating-input" style="height: 56px; font-family: monospace;" placeholder=" " autocomplete="off" spellcheck="false" />
+                  <label for="posvenda-brevo-api-key" class="floating-label">Chave de API Brevo (xkeysib-...)</label>
+                </div>
+                <button type="button" id="posvenda-clear-brevo-btn" class="btn-secondary" style="height: 56px; padding: 0 18px; white-space: nowrap; font-size: 0.85rem;" title="Remover e limpar token da Brevo">
+                  🗑️ Limpar Token
+                </button>
               </div>
             </div>
           </div>
@@ -334,6 +339,6 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/script.js?v=11.4" defer></script>
+  <script src="/script.js?v=11.5" defer></script>
 </body>
 </html>
