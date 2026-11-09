@@ -134,6 +134,34 @@
           </div>
           <p class="admin-hint">Configure o prazo de entrega estendido (mínimo de 8 a 15 dias úteis) e o template do e-mail oficial de envio do código.</p>
 
+          <!-- Seção de Envio sem precisar verificar domínio: Gmail -->
+          <div style="background: rgba(34, 197, 94, 0.05); border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+              <h3 style="margin: 0; color: #22c55e; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                <span>🟢</span> Envio pelo Gmail (100% Grátis • SEM Precisar Verificar Domínio)
+              </h3>
+              <span class="admin-chip" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.3);">Recomendado</span>
+            </div>
+            <p style="margin: 0 0 14px 0; color: var(--text-muted); font-size: 0.86rem; line-height: 1.45;">
+              Envie e-mails para qualquer lead ou teste sem precisar comprar ou configurar domínio. Basta informar seu Gmail e a Senha de Aplicativo de 16 caracteres.
+            </p>
+
+            <div class="admin-grid">
+              <div class="input-group">
+                <input type="text" id="posvenda-gmail-user" class="floating-input" placeholder=" " />
+                <label for="posvenda-gmail-user" class="floating-label">Seu e-mail do Gmail (ex: seuemail@gmail.com)</label>
+              </div>
+
+              <div class="input-group">
+                <input type="password" id="posvenda-gmail-pass" class="floating-input" placeholder=" " autocomplete="new-password" />
+                <label for="posvenda-gmail-pass" class="floating-label">Senha de App do Google (16 letras)</label>
+                <small style="color: var(--text-muted); font-size: 0.78rem; display: block; margin-top: 4px;">
+                  Gere em 1 minuto em <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #22c55e; text-decoration: underline; font-weight: 600;">myaccount.google.com/apppasswords</a>
+                </small>
+              </div>
+            </div>
+          </div>
+
           <div class="admin-grid">
             <label class="admin-switch">
               <input type="checkbox" id="posvenda-auto-tracking" checked />

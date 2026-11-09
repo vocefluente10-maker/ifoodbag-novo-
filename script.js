@@ -4435,6 +4435,8 @@ function initAdmin() {
     const posvendaEmailSubject = document.getElementById('posvenda-email-subject');
     const posvendaCompanyName = document.getElementById('posvenda-company-name');
     const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
+    const posvendaGmailUser = document.getElementById('posvenda-gmail-user');
+    const posvendaGmailPass = document.getElementById('posvenda-gmail-pass');
     const posvendaResendApiKey = document.getElementById('posvenda-resend-api-key');
     const posvendaEmailFrom = document.getElementById('posvenda-email-from');
     const posvendaSmtpHost = document.getElementById('posvenda-smtp-host');
@@ -5532,6 +5534,8 @@ function initAdmin() {
             if (posvendaEmailSubject) posvendaEmailSubject.value = posvenda.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}';
             if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
+            if (posvendaGmailUser) posvendaGmailUser.value = posvenda.gmailUser || '';
+            if (posvendaGmailPass) posvendaGmailPass.value = posvenda.gmailPass || '';
             if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
             if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
             const smtp = posvenda.smtp || {};
@@ -6676,6 +6680,8 @@ function initAdmin() {
                 emailSubject: readInputSetting(posvendaEmailSubject, currentSettings?.posvenda?.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}'),
                 companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
+                gmailUser: readInputSetting(posvendaGmailUser, currentSettings?.posvenda?.gmailUser || ''),
+                gmailPass: readInputSetting(posvendaGmailPass, currentSettings?.posvenda?.gmailPass || ''),
                 resendApiKey: readInputSetting(posvendaResendApiKey, currentSettings?.posvenda?.resendApiKey || ''),
                 emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>'),
                 smtp: {
@@ -8826,7 +8832,8 @@ function initAdmin() {
         if (!currentApiKey) currentApiKey = atob('cmVfZlp2emVXQWtfNGdqN05qOHhFc21hQ3FlcWd1aWkyS3RO');
         if (posvendaResendApiKey && !posvendaResendApiKey.value) posvendaResendApiKey.value = currentApiKey;
 
-        const testEmail = prompt('Digite o e-mail para receber o teste do entregável:', 'resend381@gmail.com');
+        const defaultTest = (posvendaGmailUser && posvendaGmailUser.value.trim()) || 'seu-email@gmail.com';
+        const testEmail = prompt('Digite o e-mail de destino para receber o teste:', defaultTest);
         if (!testEmail || !testEmail.includes('@')) {
             if (testEmail !== null) showToast('Informe um e-mail válido.', 'error');
             return;
@@ -8846,6 +8853,8 @@ function initAdmin() {
                     email: testEmail,
                     product: prod,
                     name: 'Entregador de Teste',
+                    gmailUser: posvendaGmailUser ? posvendaGmailUser.value.trim() : '',
+                    gmailPass: posvendaGmailPass ? posvendaGmailPass.value.trim() : '',
                     resendApiKey: currentApiKey,
                     emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
                     smtp: {
