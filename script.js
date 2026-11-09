@@ -4437,6 +4437,7 @@ function initAdmin() {
     const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
     const posvendaGmailUser = document.getElementById('posvenda-gmail-user');
     const posvendaGmailPass = document.getElementById('posvenda-gmail-pass');
+    const posvendaBrevoApiKey = document.getElementById('posvenda-brevo-api-key');
     const posvendaResendApiKey = document.getElementById('posvenda-resend-api-key');
     const posvendaEmailFrom = document.getElementById('posvenda-email-from');
     const posvendaSmtpHost = document.getElementById('posvenda-smtp-host');
@@ -5536,6 +5537,7 @@ function initAdmin() {
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
             if (posvendaGmailUser) posvendaGmailUser.value = posvenda.gmailUser || '';
             if (posvendaGmailPass) posvendaGmailPass.value = posvenda.gmailPass || '';
+            if (posvendaBrevoApiKey) posvendaBrevoApiKey.value = posvenda.brevoApiKey || '';
             if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
             if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
             const smtp = posvenda.smtp || {};
@@ -6682,6 +6684,7 @@ function initAdmin() {
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
                 gmailUser: readInputSetting(posvendaGmailUser, currentSettings?.posvenda?.gmailUser || ''),
                 gmailPass: readInputSetting(posvendaGmailPass, currentSettings?.posvenda?.gmailPass || ''),
+                brevoApiKey: readInputSetting(posvendaBrevoApiKey, currentSettings?.posvenda?.brevoApiKey || ''),
                 resendApiKey: readInputSetting(posvendaResendApiKey, currentSettings?.posvenda?.resendApiKey || ''),
                 emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>'),
                 smtp: {
@@ -8855,6 +8858,7 @@ function initAdmin() {
                     name: 'Entregador de Teste',
                     gmailUser: posvendaGmailUser ? posvendaGmailUser.value.trim() : '',
                     gmailPass: posvendaGmailPass ? posvendaGmailPass.value.trim() : '',
+                    brevoApiKey: posvendaBrevoApiKey ? posvendaBrevoApiKey.value.trim() : '',
                     resendApiKey: currentApiKey,
                     emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
                     smtp: {
