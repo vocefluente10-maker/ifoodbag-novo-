@@ -175,11 +175,11 @@
               <label for="posvenda-company-cnpj" class="floating-label">CNPJ da Empresa</label>
             </div>
 
-            <div class="input-group">
-              <input type="password" id="posvenda-resend-api-key" class="floating-input" placeholder=" " autocomplete="new-password" />
-              <label for="posvenda-resend-api-key" class="floating-label">Chave de API Resend (Bearer Token: re_...)</label>
-              <small style="color: var(--text-muted); font-size: 0.76rem; display: block; margin-top: 4px;">
-                Obtenha sua chave gratuita em <a href="https://resend.com/api-keys" target="_blank" style="color: #38bdf8;">resend.com/api-keys</a> para enviar e-mails para caixas de entrada reais.
+            <div class="input-group" style="grid-column: 1 / -1; margin: 6px 0;">
+              <input type="text" id="posvenda-resend-api-key" class="floating-input" style="height: 60px; min-height: 60px; font-size: 1.05rem; font-family: monospace; padding: 22px 16px 8px 16px; border-radius: 12px; border: 2px solid #38bdf8; background: rgba(56, 189, 248, 0.04);" placeholder=" " autocomplete="off" spellcheck="false" />
+              <label for="posvenda-resend-api-key" class="floating-label" style="font-weight: 700; color: #38bdf8;">🔑 Chave de API Token Resend (Bearer Token: re_...)</label>
+              <small style="color: var(--text-muted); font-size: 0.82rem; display: block; margin-top: 6px;">
+                Cole sua chave/token completa da Resend aqui (ex: <code style="color: #38bdf8; font-weight: 700;">re_123456789...</code>). Obtenha gratuitamente em <a href="https://resend.com/api-keys" target="_blank" style="color: #38bdf8; text-decoration: underline;">resend.com/api-keys</a>.
               </small>
             </div>
 

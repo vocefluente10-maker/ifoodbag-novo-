@@ -7963,3 +7963,22 @@ body.modal-open {
     right: auto;
     color: #ffffff;
 }
+
+/* Espaçamento ampliado para campos de API Token e Chaves */
+.admin-grid .input-group:has(input[id*="token"]),
+.admin-grid .input-group:has(input[id*="api-key"]),
+.gateway-fields-grid .input-group:has(input[id*="token"]),
+.gateway-fields-grid .input-group:has(input[id*="api-key"]) {
+    grid-column: 1 / -1;
+}
+
+input[id*="token"].floating-input,
+input[id*="api-key"].floating-input,
+#posvenda-resend-api-key,
+#gateway-atomopay-api-token {
+    min-height: 58px !important;
+    height: 58px !important;
+    font-size: 1rem !important;
+    padding: 22px 16px 8px 16px !important;
+    border-radius: 12px !important;
+}
