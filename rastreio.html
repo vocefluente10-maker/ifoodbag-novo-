@@ -765,13 +765,17 @@
       <form id="tracking-search-form" class="tracking-input-row" onsubmit="event.preventDefault(); handleTrackingSearch();">
         <div class="tracking-input-wrap">
           <span class="tracking-input-icon">🔍</span>
-          <input type="text" id="tracking-input-code" class="tracking-input" placeholder="DIGITE O CÓDIGO (EX: BR849204918IF) OU SEU CPF" autocomplete="off" />
+          <input type="text" id="tracking-input-code" class="tracking-input" placeholder="DIGITE SEU CPF OU CÓDIGO DE RASTREIO (EX: BR849204918IF)" autocomplete="off" />
         </div>
         <button type="submit" id="btn-tracking-submit" class="tracking-btn-search">
-          <span>Rastrear</span>
+          <span>Consultar</span>
           <span>→</span>
         </button>
       </form>
+      <div id="tracking-code-generated-banner" style="display: none; margin-top: 16px; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 18px; color: #065f46; font-size: 0.92rem; line-height: 1.5;">
+        <span style="font-size: 1.25rem; vertical-align: -2px; margin-right: 6px;">✅</span>
+        <span>Código oficial gerado e sincronizado: <strong id="generated-code-text" style="font-family: monospace; font-size: 1.1rem; letter-spacing: 1px; color: #047857;"></strong>. Você pode copiar este código para consultas futuras ou continuar entrando diretamente pelo seu CPF!</span>
+      </div>
     </section>
 
     <!-- Tracking Result Container -->
@@ -858,23 +862,23 @@
             <div class="tracking-detail-list">
               <div class="tracking-detail-row">
                 <span class="tracking-detail-label">Destinatário:</span>
-                <span class="tracking-detail-val" id="track-recipient-name">Carlos Eduardo da Silva</span>
+                <span class="tracking-detail-val" id="track-recipient-name">Carregando...</span>
               </div>
               <div class="tracking-detail-row">
                 <span class="tracking-detail-label">Documento:</span>
-                <span class="tracking-detail-val" id="track-recipient-doc">***.482.910-**</span>
+                <span class="tracking-detail-val" id="track-recipient-doc">***.***.***-**</span>
               </div>
-              <div class="tracking-detail-row">
-                <span class="tracking-detail-label">Endereço de Entrega:</span>
-                <span class="tracking-detail-val" id="track-recipient-address">São Paulo - SP</span>
+              <div class="tracking-detail-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <span class="tracking-detail-label">Endereço de Destino (Conferência de Entrega):</span>
+                <span class="tracking-detail-val" id="track-recipient-address" style="line-height: 1.45; color: #111827; font-weight: 600; text-align: left;">Carregando dados da entrega...</span>
               </div>
               <div class="tracking-detail-row">
                 <span class="tracking-detail-label">Nota Fiscal (DANFE):</span>
-                <span class="tracking-detail-val" style="color: var(--ifood-red); cursor: pointer;" onclick="openNfeModal()">Nº 008.492 (Série 1)</span>
+                <span class="tracking-detail-val" style="color: var(--ifood-red); cursor: pointer; font-weight: 700;" onclick="openNfeModal()">Visualizar DANFE Oficial →</span>
               </div>
               <div class="tracking-detail-row">
                 <span class="tracking-detail-label">Status do Pagamento:</span>
-                <span class="tracking-detail-val" style="color: #059669;">Aprovado via PIX</span>
+                <span class="tracking-detail-val" style="color: #059669; font-weight: 700;">✓ Aprovado via PIX</span>
               </div>
             </div>
 
@@ -1057,19 +1061,43 @@
         if (nfeName && prod.title) nfeName.textContent = prod.title.toUpperCase();
       }
 
+      if (data.code) {
+        const codeDisplay = document.getElementById('track-code-display');
+        if (codeDisplay) codeDisplay.textContent = data.code;
+      }
+
       if (data.recipient) {
-        document.getElementById('track-recipient-name').textContent = data.recipient.name || 'Carlos Eduardo da Silva';
-        document.getElementById('track-recipient-doc').textContent = data.recipient.document || '***.482.910-**';
-        document.getElementById('track-recipient-address').textContent = `${data.recipient.city || 'São Paulo'} - ${data.recipient.state || 'SP'}`;
+        document.getElementById('track-recipient-name').textContent = data.recipient.name || 'Parceiro iFood';
+        document.getElementById('track-recipient-doc').textContent = data.recipient.document || '***.***.***-**';
+        document.getElementById('track-recipient-address').textContent = data.recipient.address || data.recipient.addressShort || 'Brasil';
+      }
+
+      // Check if code was auto-generated from CPF or matched
+      const generatedBanner = document.getElementById('tracking-code-generated-banner');
+      const generatedCodeText = document.getElementById('generated-code-text');
+      if (generatedBanner) {
+        if (data.isNewCodeGenerated || data.matchType === 'cpf' || data.matchType === 'cpf_generated') {
+          if (generatedCodeText) generatedCodeText.textContent = data.code;
+          generatedBanner.style.display = 'block';
+        } else {
+          generatedBanner.style.display = 'none';
+        }
+      }
+
+      // Update URL without reloading so lead can bookmark/copy their tracking link
+      if (data.code && window.history && window.history.replaceState) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('codigo', data.code);
+        window.history.replaceState({}, '', currentUrl.toString());
       }
 
       if (data.nfe) {
         document.getElementById('nfe-modal-key').textContent = `CHAVE DE ACESSO: ${data.nfe.key || ''}`;
         document.getElementById('nfe-modal-emitter').textContent = data.company?.name || 'iFood Logística & Distribuição Brasil Ltda';
         document.getElementById('nfe-modal-cnpj').textContent = `CNPJ: ${data.company?.cnpj || '14.380.200/0001-21'}`;
-        document.getElementById('nfe-modal-dest').textContent = data.recipient?.name || 'Carlos Eduardo da Silva';
-        document.getElementById('nfe-modal-doc').textContent = `CPF: ${data.recipient?.document || '***.482.910-**'}`;
-        document.getElementById('nfe-modal-addr').textContent = `${data.recipient?.address || ''}, ${data.recipient?.city || 'São Paulo'} - ${data.recipient?.state || 'SP'}`;
+        document.getElementById('nfe-modal-dest').textContent = data.recipient?.name || 'Parceiro iFood';
+        document.getElementById('nfe-modal-doc').textContent = `CPF: ${data.recipient?.document || '***.***.***-**'}`;
+        document.getElementById('nfe-modal-addr').textContent = data.recipient?.address || `${data.recipient?.addressShort || 'São Paulo - SP'}`;
       }
 
       // Email Support Link
@@ -1082,7 +1110,7 @@
       renderTimeline(data.timeline);
     }
 
-    async function fetchTracking(queryCode, productOverride) {
+    async function fetchTracking(queryTerm, productOverride) {
       const submitBtn = document.getElementById('btn-tracking-submit');
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -1090,8 +1118,13 @@
       }
 
       const prod = productOverride || resolveClientReward();
+      const cleanTerm = String(queryTerm || '').trim();
+      const digitsOnly = cleanTerm.replace(/\D/g, '');
+      const isDigitsCpf = digitsOnly.length === 11;
+      const paramName = isDigitsCpf ? 'cpf' : 'codigo';
+
       try {
-        const res = await fetch(`/api/site/tracking?codigo=${encodeURIComponent(queryCode)}&produto=${encodeURIComponent(prod)}`);
+        const res = await fetch(`/api/site/tracking?${paramName}=${encodeURIComponent(cleanTerm)}&produto=${encodeURIComponent(prod)}`);
         if (!res.ok) throw new Error('Falha na consulta');
         const data = await res.json();
         applyTrackingData(data);
@@ -1100,7 +1133,7 @@
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Rastrear</span> <span>→</span>';
+          submitBtn.innerHTML = '<span>Consultar</span> <span>→</span>';
         }
       }
     }
@@ -1117,14 +1150,16 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search || '');
-      const codeParam = params.get('codigo') || params.get('code') || params.get('id') || params.get('cpf');
+      const codeParam = params.get('codigo') || params.get('code') || params.get('id');
+      const cpfParam = params.get('cpf') || params.get('doc');
       const prodParam = params.get('produto') || params.get('item') || params.get('reward') || resolveClientReward();
-      const codeToUse = codeParam || 'BR849204918IF';
+      
+      const termToUse = cpfParam || codeParam || 'BR849204918IF';
 
       const input = document.getElementById('tracking-input-code');
-      if (input && codeParam) input.value = codeParam;
+      if (input && (cpfParam || codeParam)) input.value = cpfParam || codeParam;
 
-      fetchTracking(codeToUse, prodParam);
+      fetchTracking(termToUse, prodParam);
     });
   </script>
 </body>

