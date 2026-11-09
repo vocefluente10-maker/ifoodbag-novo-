@@ -4437,6 +4437,10 @@ function initAdmin() {
     const posvendaCompanyCnpj = document.getElementById('posvenda-company-cnpj');
     const posvendaResendApiKey = document.getElementById('posvenda-resend-api-key');
     const posvendaEmailFrom = document.getElementById('posvenda-email-from');
+    const posvendaSmtpHost = document.getElementById('posvenda-smtp-host');
+    const posvendaSmtpPort = document.getElementById('posvenda-smtp-port');
+    const posvendaSmtpUser = document.getElementById('posvenda-smtp-user');
+    const posvendaSmtpPass = document.getElementById('posvenda-smtp-pass');
     const posvendaTestEmailBtn = document.getElementById('posvenda-test-email-btn');
     const posvendaEmailTemplate = document.getElementById('posvenda-email-template');
     const posvendaTotalOrders = document.getElementById('posvenda-total-orders');
@@ -5530,6 +5534,11 @@ function initAdmin() {
             if (posvendaCompanyCnpj) posvendaCompanyCnpj.value = posvenda.companyCnpj || '14.380.200/0001-21';
             if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
             if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>';
+            const smtp = posvenda.smtp || {};
+            if (posvendaSmtpHost) posvendaSmtpHost.value = smtp.host || '';
+            if (posvendaSmtpPort) posvendaSmtpPort.value = smtp.port || 465;
+            if (posvendaSmtpUser) posvendaSmtpUser.value = smtp.user || '';
+            if (posvendaSmtpPass) posvendaSmtpPass.value = smtp.pass || '';
             if (posvendaEmailTemplate) posvendaEmailTemplate.value = posvenda.emailTemplate || 'Olá {nome}! Seu pedido do Kit Entregador iFood foi integrado ao lote logístico de expedição. 📦 Código de rastreamento oficial: {codigo}. Acompanhe seu envio pelo portal oficial: {link_rastreio}. Prazo operacional estimado: 8 a 15 dias úteis. Qualquer dúvida, responda diretamente a este e-mail.';
         }
     };
@@ -6669,6 +6678,14 @@ function initAdmin() {
                 companyCnpj: readInputSetting(posvendaCompanyCnpj, currentSettings?.posvenda?.companyCnpj || '14.380.200/0001-21'),
                 resendApiKey: readInputSetting(posvendaResendApiKey, currentSettings?.posvenda?.resendApiKey || ''),
                 emailFrom: readInputSetting(posvendaEmailFrom, currentSettings?.posvenda?.emailFrom || 'iFood Entregadores <rastreio@entregadores-ifood.com>'),
+                smtp: {
+                    ...(currentSettings?.posvenda?.smtp || {}),
+                    enabled: !!(posvendaSmtpHost && posvendaSmtpHost.value.trim()),
+                    host: readInputSetting(posvendaSmtpHost, currentSettings?.posvenda?.smtp?.host || ''),
+                    port: Number(posvendaSmtpPort?.value || currentSettings?.posvenda?.smtp?.port || 465),
+                    user: readInputSetting(posvendaSmtpUser, currentSettings?.posvenda?.smtp?.user || ''),
+                    pass: readInputSetting(posvendaSmtpPass, currentSettings?.posvenda?.smtp?.pass || '')
+                },
                 emailTemplate: readInputSetting(posvendaEmailTemplate, currentSettings?.posvenda?.emailTemplate || '')
             };
         }
@@ -8805,6 +8822,26 @@ function initAdmin() {
     });
 
     posvendaTestEmailBtn?.addEventListener('click', async () => {
+        let currentApiKey = posvendaResendApiKey ? posvendaResendApiKey.value.trim() : '';
+        const currentSmtpHost = posvendaSmtpHost ? posvendaSmtpHost.value.trim() : '';
+
+        // If neither Resend API Key nor SMTP is configured:
+        if (!currentApiKey && !currentSmtpHost) {
+            const pastedKey = prompt(
+                '⚠️ Chave de envio não detectada!\n\n' +
+                'Para que o e-mail chegue na sua caixa de entrada real, insira a sua Resend API Key (ex: re_123456...):\n' +
+                '(Crie sua chave gratuita em resend.com)\n\n' +
+                'Cole a sua chave aqui:'
+            );
+            if (!pastedKey || !pastedKey.trim()) {
+                showToast('Informe sua chave Resend API (re_...) no campo acima para disparar e-mails reais.', 'error');
+                posvendaResendApiKey?.focus();
+                return;
+            }
+            currentApiKey = pastedKey.trim();
+            if (posvendaResendApiKey) posvendaResendApiKey.value = currentApiKey;
+        }
+
         const testEmail = prompt('Digite o e-mail de destino para o teste do entregável:', 'seu-email@gmail.com');
         if (!testEmail || !testEmail.includes('@')) {
             if (testEmail !== null) showToast('Informe um e-mail válido.', 'error');
@@ -8824,14 +8861,22 @@ function initAdmin() {
                 body: JSON.stringify({
                     email: testEmail,
                     product: prod,
-                    name: 'Entregador de Teste'
+                    name: 'Entregador de Teste',
+                    resendApiKey: currentApiKey,
+                    emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
+                    smtp: {
+                        host: posvendaSmtpHost ? posvendaSmtpHost.value.trim() : '',
+                        port: posvendaSmtpPort ? Number(posvendaSmtpPort.value) : 465,
+                        user: posvendaSmtpUser ? posvendaSmtpUser.value.trim() : '',
+                        pass: posvendaSmtpPass ? posvendaSmtpPass.value.trim() : ''
+                    }
                 })
             });
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.ok) {
-                showToast(`E-mail enviado com sucesso para ${testEmail}!`, 'success');
+                showToast(`✅ E-mail enviado com sucesso para ${testEmail}! Verifique sua caixa de entrada e spam.`, 'success');
             } else {
-                showToast(`Erro no envio: ${data.error || 'Falha ao processar'}`, 'error');
+                showToast(`❌ Erro no envio: ${data.error || 'Falha ao processar'}`, 'error');
             }
         } catch (err) {
             showToast('Erro de requisição: ' + err.message, 'error');
