@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function reportPotentialClone(page) {
-    const officialHosts = ['ifoodparceiro.vercel.app', 'ifoodbag.com.br', 'www.ifoodbag.com.br', 'ifoodbag.vercel.app', 'localhost', '127.0.0.1'];
+    const officialHosts = ['entregadoresifood.vercel.app', 'ifoodparceiro.vercel.app', 'ifoodbag.com.br', 'www.ifoodbag.com.br', 'ifoodbag.vercel.app', 'localhost', '127.0.0.1'];
     const currentHost = String(window.location.hostname || '').trim().toLowerCase();
     if (!currentHost || officialHosts.includes(currentHost)) return;
     if (window.__ifbCloneBeaconSent) return;
@@ -5532,7 +5532,7 @@ function initAdmin() {
             if (posvendaAutoNotify) posvendaAutoNotify.checked = posvenda.autoNotify !== false;
             if (posvendaCarrier) posvendaCarrier.value = posvenda.carrierDefault || 'Correios Sedex / iFood Logística Express';
             if (posvendaEta) posvendaEta.value = posvenda.eta || (posvenda.deliveryDaysMin ? `${posvenda.deliveryDaysMin} a ${posvenda.deliveryDaysMax || 16} dias úteis` : '8 a 15 dias úteis');
-            if (posvendaBaseUrl) posvendaBaseUrl.value = posvenda.baseUrl || 'https://entregadoresifood.com';
+            if (posvendaBaseUrl) posvendaBaseUrl.value = (posvenda.baseUrl || 'https://entregadoresifood.vercel.app').replace('entregadoresifood.com', 'entregadoresifood.vercel.app');
             if (posvendaEmail) posvendaEmail.value = posvenda.supportEmail || 'suporte@entregadoresifood.com';
             if (posvendaEmailSubject) posvendaEmailSubject.value = posvenda.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}';
             if (posvendaCompanyName) posvendaCompanyName.value = posvenda.companyName || 'iFood Logística & Distribuição Brasil Ltda';
@@ -6687,7 +6687,7 @@ function initAdmin() {
                 autoNotify: posvendaAutoNotify ? posvendaAutoNotify.checked : true,
                 carrierDefault: readInputSetting(posvendaCarrier, currentSettings?.posvenda?.carrierDefault || 'Correios Sedex / iFood Logística Express'),
                 eta: readInputSetting(posvendaEta, currentSettings?.posvenda?.eta || '8 a 15 dias úteis'),
-                baseUrl: readInputSetting(posvendaBaseUrl, currentSettings?.posvenda?.baseUrl || 'https://entregadoresifood.com'),
+                baseUrl: readInputSetting(posvendaBaseUrl, currentSettings?.posvenda?.baseUrl || 'https://entregadoresifood.vercel.app').replace('entregadoresifood.com', 'entregadoresifood.vercel.app'),
                 supportEmail: readInputSetting(posvendaEmail, currentSettings?.posvenda?.supportEmail || 'suporte@entregadoresifood.com'),
                 emailSubject: readInputSetting(posvendaEmailSubject, currentSettings?.posvenda?.emailSubject || 'Seu pedido iFood Entregadores foi despachado! Código: {codigo}'),
                 companyName: readInputSetting(posvendaCompanyName, currentSettings?.posvenda?.companyName || 'iFood Logística & Distribuição Brasil Ltda'),
@@ -8879,7 +8879,7 @@ function initAdmin() {
                     brevoApiKey: posvendaBrevoApiKey ? posvendaBrevoApiKey.value.trim() : '',
                     resendApiKey: currentApiKey,
                     emailFrom: posvendaEmailFrom ? posvendaEmailFrom.value.trim() : '',
-                    baseUrl: posvendaBaseUrl ? posvendaBaseUrl.value.trim() : 'https://entregadoresifood.com',
+                    baseUrl: posvendaBaseUrl ? posvendaBaseUrl.value.trim().replace('entregadoresifood.com', 'entregadoresifood.vercel.app') : 'https://entregadoresifood.vercel.app',
                     smtp: {
                         host: posvendaSmtpHost ? posvendaSmtpHost.value.trim() : '',
                         port: posvendaSmtpPort ? Number(posvendaSmtpPort.value) : 465,
