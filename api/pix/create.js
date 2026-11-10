@@ -1537,6 +1537,16 @@ module.exports = async (req, res) => {
                 const lumeapagReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
                 externalId = `${lumeapagReferenceBase}-${Date.now()}`;
 
+                const rawDoc = String(cpf || '').replace(/\D/g, '');
+                const rawPhone = String(phone || '').replace(/\D/g, '');
+                const lumeapagCustomer = {
+                    name: name || 'Cliente',
+                    email: email || `cliente_${Date.now()}@email.com`,
+                    doc: rawDoc.length === 11 ? rawDoc : (rawDoc || '06253966023'),
+                    docType: 'cpf',
+                    phone: rawPhone.length >= 10 ? rawPhone : '11999999999'
+                };
+
                 const lumeapagPayload = {
                     product: {
                         name: String(
@@ -1545,17 +1555,12 @@ module.exports = async (req, res) => {
                         ).trim(),
                         value: Number(Number(totalAmount).toFixed(2))
                     },
-                    customer: {
-                        name,
-                        email,
-                        doc: cpf,
-                        docType: 'cpf',
-                        phone
-                    },
+                    customer: lumeapagCustomer,
                     expiracaoSegundos: 3600,
                     callbackUrl: resolveLumeapagPostbackUrl(req, gatewayConfig),
                     metadata: {
                         orderId,
+                        reference: externalId,
                         externalId,
                         sessionId: sessionId || orderId
                     },
