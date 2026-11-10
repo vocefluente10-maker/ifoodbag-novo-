@@ -64,6 +64,14 @@ const {
     resolveBravoPayPixPayload
 } = require('../../lib/bravopay-status');
 const {
+    requestTransactionById: requestLumeapagStatus,
+    getLumeapagStatus,
+    isLumeapagPaidStatus,
+    isLumeapagRefundedStatus,
+    isLumeapagRefusedStatus,
+    mapLumeapagStatusToUtmify
+} = require('../../lib/lumeapag-provider');
+const {
     getLeadByPixTxid,
     getLeadBySessionId,
     updateLeadByPixTxid,
@@ -237,7 +245,8 @@ function extractPixFieldsForStatus(gateway, payload = {}) {
 
     const isGhost = gateway === 'ghostspay';
     const isSunize = gateway === 'sunize';
-    const isParadise = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag');
+    const isLumeapag = gateway === 'lumeapag';
+    const isParadise = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag');
     let paymentCode = '';
     let qrRaw = '';
     let paymentQrUrl = '';
@@ -301,6 +310,23 @@ function extractPixFieldsForStatus(gateway, payload = {}) {
             pix.qrCodeUrl,
             pix.qr_code_url
         );
+    } else if (isLumeapag) {
+        paymentCode = pickText(
+            root.pixCode,
+            root.pix_code,
+            nested.pixCode,
+            nested.pix_code,
+            root.qr_code,
+            nested.qr_code,
+            root.paymentCode,
+            nested.paymentCode
+        );
+        qrRaw = pickText(
+            root.pixCodeBase64,
+            root.qr_code_base64,
+            nested.pixCodeBase64,
+            nested.qr_code_base64
+        );
     } else if (isParadise) {
         paymentCode = pickText(
             root.qr_code,
@@ -359,7 +385,10 @@ function mapGatewayStatusToFrontend(gateway, statusRaw) {
     if (gateway === 'sunize') {
         return mapUtmifyStatusToFrontend(mapSunizeStatusToUtmify(statusRaw));
     }
-    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+    if (gateway === 'lumeapag') {
+        return mapUtmifyStatusToFrontend(mapLumeapagStatusToUtmify(statusRaw));
+    }
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         return mapUtmifyStatusToFrontend(mapParadiseStatusToUtmify(statusRaw));
     }
     if (gateway === 'atomopay') {
@@ -905,7 +934,39 @@ module.exports = async (req, res) => {
             toIsoDate(data?.paidAt) ||
             new Date().toISOString();
         ({ paymentCode, paymentCodeBase64, paymentQrUrl } = extractPixFieldsForStatus(gateway, data));
-    } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+    } else if (gateway === 'lumeapag') {
+        ({ response, data } = await requestLumeapagStatus(statusGatewayConfig, txid));
+        if (!response?.ok) {
+            const status = Number(response?.status || 0);
+            res.status(status === 404 ? 200 : 502).json({
+                ok: status === 404,
+                status: leadStatus.status || 'waiting_payment',
+                statusRaw: leadStatus.statusRaw || '',
+                txid,
+                gateway,
+                source: 'database_fallback',
+                detail: data?.error || data?.message || ''
+            });
+            return;
+        }
+
+        statusRaw = getLumeapagStatus(data);
+        const mapped = mapLumeapagStatusToUtmify(statusRaw);
+        nextStatus = isLumeapagPaidStatus(statusRaw)
+            ? 'paid'
+            : isLumeapagRefundedStatus(statusRaw)
+                ? 'refunded'
+                : isLumeapagRefusedStatus(statusRaw)
+                    ? 'refused'
+                    : mapUtmifyStatusToFrontend(mapped);
+        const item = data?.data && typeof data.data === 'object' ? data.data : data;
+        changedAtIso =
+            toIsoDate(item?.paidAt) ||
+            toIsoDate(item?.paid_at) ||
+            toIsoDate(item?.updated_at) ||
+            new Date().toISOString();
+        ({ paymentCode, paymentCodeBase64, paymentQrUrl } = extractPixFieldsForStatus(gateway, data));
+    } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         ({ response, data } = await requestParadiseStatus(statusGatewayConfig, txid));
         if (!response?.ok) {
             const status = Number(response?.status || 0);
@@ -1103,12 +1164,14 @@ module.exports = async (req, res) => {
                 : fallbackLeadAmount;
         const upsellEvent = isUpsellLead(latestLead);
         const rewardSnapshot = upsellEvent ? null : buildLeadRewardSnapshot(latestPayload);
-        const utmifyStatus = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag')
-            ? mapParadiseStatusToUtmify(statusRaw)
-            : gateway === 'atomopay'
-                ? mapAtomopayStatusToUtmify(statusRaw)
-                : gateway === 'bravopay'
-                    ? mapBravoPayStatusToUtmify(statusRaw)
+        const utmifyStatus = gateway === 'lumeapag'
+            ? mapLumeapagStatusToUtmify(statusRaw)
+            : (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag')
+                ? mapParadiseStatusToUtmify(statusRaw)
+                : gateway === 'atomopay'
+                    ? mapAtomopayStatusToUtmify(statusRaw)
+                    : gateway === 'bravopay'
+                        ? mapBravoPayStatusToUtmify(statusRaw)
             : nextStatus === 'paid'
                 ? 'paid'
                 : nextStatus === 'refunded'
@@ -1137,7 +1200,15 @@ module.exports = async (req, res) => {
                 data?.data?.fee ||
                 0
             );
-        } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+        } else if (gateway === 'lumeapag') {
+            gatewayFee = normalizeMoneyToBrl(
+                data?.feeAmount ||
+                data?.fee ||
+                data?.data?.feeAmount ||
+                data?.data?.fee ||
+                0
+            );
+        } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
             gatewayFee = normalizeMoneyToBrl(
                 data?.fee ||
                 data?.gateway_fee ||

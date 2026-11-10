@@ -47,6 +47,16 @@ const {
     getBravoPayStatus,
     resolveBravoPayPixPayload
 } = require('../../lib/bravopay-status');
+const {
+    cleanApiKey,
+    requestCreateTransaction: requestLumeapagCreate,
+    requestTransactionById: requestLumeapagStatus,
+    resolvePostbackUrl: resolveLumeapagPostbackUrl,
+    resolveLumeapagCreateResponse,
+    hasLumeapagCredentials,
+    getLumeapagStatus,
+    mapLumeapagStatusToUtmify
+} = require('../../lib/lumeapag-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 
 function resolveGateway(rawBody = {}, payments = {}) {
@@ -79,7 +89,8 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
         const config = payments?.gateways?.[gateway] || {};
         if (gateway === 'ghostspay') return hasGhostspayCredentials(config);
         if (gateway === 'sunize') return hasSunizeCredentials(config);
-        if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') return hasParadiseCredentials(config);
+        if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') return hasParadiseCredentials(config);
+        if (gateway === 'lumeapag') return hasLumeapagCredentials(config);
         if (gateway === 'atomopay') return hasAtomopayCredentials(config);
         if (gateway === 'bravopay') return hasBravoPayCredentials(config);
         return false;
@@ -857,7 +868,20 @@ async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
         return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
     }
 
-    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+    if (gateway === 'lumeapag') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestLumeapagStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveLumeapagCreateResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const quickConfig = {
             ...gatewayConfig,
             timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
@@ -1500,7 +1524,96 @@ module.exports = async (req, res) => {
                 paymentQrUrl = sunizeData.paymentQrUrl;
                 statusRaw = sunizeData.status;
                 externalId = sunizeData.externalId || externalId;
-            } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+            } else if (gateway === 'lumeapag') {
+                if (!hasLumeapagCredentials(gatewayConfig)) {
+                    console.warn('[pix] lumeapag missing credentials', {
+                        hasApiKey: Boolean(cleanApiKey(gatewayConfig.apiKey)),
+                        baseUrl: String(gatewayConfig.baseUrl || '').trim()
+                    });
+                    rememberGatewayFailure(gateway, 'lumeapag_missing_credentials');
+                    continue;
+                }
+
+                const lumeapagReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${lumeapagReferenceBase}-${Date.now()}`;
+
+                const lumeapagPayload = {
+                    product: {
+                        name: String(
+                            gatewayConfig.description ||
+                            (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                        ).trim(),
+                        value: Number(Number(totalAmount).toFixed(2))
+                    },
+                    customer: {
+                        name,
+                        email,
+                        doc: cpf,
+                        docType: 'cpf',
+                        phone
+                    },
+                    expiracaoSegundos: 3600,
+                    callbackUrl: resolveLumeapagPostbackUrl(req, gatewayConfig),
+                    metadata: {
+                        orderId,
+                        externalId,
+                        sessionId: sessionId || orderId
+                    },
+                    tracking: {
+                        gateway: 'lumeapag',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+
+                ({ response, data } = await requestLumeapagCreate(gatewayConfig, lumeapagPayload, { idempotencyKey: externalId }));
+                if (!response?.ok || data?.success === false || data?.error) {
+                    console.warn('[pix] lumeapag create failed', {
+                        status: Number(response?.status || 0),
+                        detail: data?.error || data?.message || '',
+                        reference: externalId
+                    });
+                    rememberGatewayFailure(gateway, 'lumeapag_create_failed', response, data);
+                    continue;
+                }
+
+                const lumeapagData = resolveLumeapagCreateResponse(data);
+                txid = lumeapagData.txid;
+                paymentCode = lumeapagData.paymentCode;
+                paymentCodeBase64 = lumeapagData.paymentCodeBase64;
+                paymentQrUrl = lumeapagData.paymentQrUrl;
+                statusRaw = lumeapagData.status;
+                externalId = lumeapagData.externalId || externalId;
+
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatus = await requestLumeapagStatus({
+                        ...gatewayConfig,
+                        timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig.timeoutMs || 12000), 3500))
+                    }, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveLumeapagCreateResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        if (!statusRaw || statusRaw === 'waiting_payment' || statusRaw === 'pending') {
+                            statusRaw = fromStatus.status;
+                        }
+                    }
+                }
+            } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
                 if (gateway === 'clownpay') gatewayConfig = require('../../lib/clownpay-provider').resolveCreateConfig(gatewayConfig, payments, upsellEnabled);
                 if (!hasParadiseCredentials(gatewayConfig)) {
                     console.warn('[pix] paradise missing credentials', {

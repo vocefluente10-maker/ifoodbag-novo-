@@ -81,6 +81,13 @@ const {
     isBravoPayChargebackStatus,
     mapBravoPayStatusToUtmify
 } = require('../../lib/bravopay-status');
+const {
+    getLumeapagStatus,
+    isLumeapagPaidStatus,
+    isLumeapagRefundedStatus,
+    isLumeapagRefusedStatus,
+    mapLumeapagStatusToUtmify
+} = require('../../lib/lumeapag-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 
 function deriveSessionIdFromGatewayReference(value = '') {
@@ -523,7 +530,86 @@ function extractGatewayEvent(gateway, body = {}, query = {}) {
         };
     }
 
-    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
+    if (gateway === 'lumeapag') {
+        const item = body?.data && typeof body.data === 'object' ? body.data : body;
+        const txid = String(item.transactionId || item.transaction_id || item.id || body.transactionId || body.id || '').trim();
+        const statusRaw = getLumeapagStatus(body);
+        const utmifyStatus = mapLumeapagStatusToUtmify(statusRaw);
+        const isPaid = isLumeapagPaidStatus(statusRaw);
+        const isRefunded = isLumeapagRefundedStatus(statusRaw);
+        const isRefused = isLumeapagRefusedStatus(statusRaw);
+        const amount = Number(item.amount || body.amount || 0);
+        const gatewayFee = Number(item.feeAmount || item.fee || body.feeAmount || body.fee || 0);
+        const userCommission = Math.max(0, Number((amount - gatewayFee).toFixed(2)));
+        const metadata = asObject(item.metadata || body.metadata);
+        const tracking = asObject(item.tracking || body.tracking);
+        const customer = asObject(item.customer || body.customer);
+        const sessionOrderId = String(
+            metadata?.sessionId ||
+            tracking?.sessionId ||
+            metadata?.orderId ||
+            tracking?.orderId ||
+            item.externalId ||
+            item.external_id ||
+            ''
+        ).trim();
+        const statusChangedAt =
+            normalizeDate(item.paidAt) ||
+            normalizeDate(item.paid_at) ||
+            normalizeDate(item.updated_at) ||
+            normalizeDate(item.updatedAt) ||
+            new Date().toISOString();
+        const pixCreatedAtFromGateway =
+            normalizeDate(item.createdAt) ||
+            normalizeDate(item.created_at) ||
+            null;
+        const lastEvent = isPaid ? 'pix_confirmed' : isRefunded ? 'pix_refunded' : isRefused ? 'pix_refused' : 'pix_pending';
+
+        return {
+            gateway,
+            txid,
+            statusRaw,
+            utmifyStatus,
+            isPaid,
+            isRefunded,
+            isRefused,
+            amount,
+            gatewayFee,
+            userCommission,
+            sessionOrderId,
+            statusChangedAt,
+            pixCreatedAtFromGateway,
+            lastEvent,
+            webhookEventId: String(body?.id || body?.eventId || body?.event_id || '').trim(),
+            fallbackIdentity: {
+                cpf: String(customer?.doc || customer?.document || '').trim(),
+                email: String(customer?.email || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            fallbackPersonal: {
+                name: String(customer?.name || '').trim(),
+                email: String(customer?.email || '').trim(),
+                cpf: String(customer?.doc || customer?.document || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            tracking: {
+                orderId: sessionOrderId,
+                sessionId: sessionOrderId,
+                utm_source: String(body?.utm_source || tracking?.utm_source || metadata?.utm_source || '').trim(),
+                utm_medium: String(body?.utm_medium || tracking?.utm_medium || metadata?.utm_medium || '').trim(),
+                utm_campaign: String(body?.utm_campaign || tracking?.utm_campaign || metadata?.utm_campaign || '').trim(),
+                utm_term: String(body?.utm_term || tracking?.utm_term || metadata?.utm_term || '').trim(),
+                utm_content: String(body?.utm_content || tracking?.utm_content || metadata?.utm_content || '').trim(),
+                src: String(body?.src || tracking?.src || metadata?.src || '').trim(),
+                sck: String(body?.sck || tracking?.sck || metadata?.sck || '').trim(),
+                fbclid: String(body?.fbclid || tracking?.fbclid || metadata?.fbclid || '').trim(),
+                gclid: String(body?.gclid || tracking?.gclid || metadata?.gclid || '').trim(),
+                ttclid: String(body?.ttclid || tracking?.ttclid || metadata?.ttclid || '').trim()
+            }
+        };
+    }
+
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const txid = getParadiseTxid(body);
         const statusRaw = getParadiseStatus(body);
         const utmifyStatus = mapParadiseStatusToUtmify(statusRaw);
