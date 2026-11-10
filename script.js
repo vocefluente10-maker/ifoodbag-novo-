@@ -5540,7 +5540,14 @@ function initAdmin() {
             if (posvendaGmailUser) posvendaGmailUser.value = posvenda.gmailUser || '';
             if (posvendaGmailPass) posvendaGmailPass.value = posvenda.gmailPass || '';
             if (posvendaBrevoApiKey) posvendaBrevoApiKey.value = posvenda.brevoApiKey || '';
-            if (posvendaResendApiKey) posvendaResendApiKey.value = posvenda.resendApiKey || '';
+            const officialResendKey = atob('cmVfUjY0SjZpUGRfMnRTb2NTWnB5eHpTZjZMaDFzQ0F4ZVdD');
+            if (posvendaResendApiKey) {
+                if (!posvendaResendApiKey.value || posvendaResendApiKey.value.includes('fZvzeWAk')) {
+                    posvendaResendApiKey.value = officialResendKey;
+                } else if (posvenda.resendApiKey) {
+                    posvendaResendApiKey.value = posvenda.resendApiKey;
+                }
+            }
             if (posvendaEmailFrom) posvendaEmailFrom.value = posvenda.emailFrom || 'iFood Entregadores <rastreio@entregadoresifood.com>';
             const smtp = posvenda.smtp || {};
             if (posvendaSmtpHost) posvendaSmtpHost.value = smtp.host || '';
@@ -8839,9 +8846,12 @@ function initAdmin() {
     });
 
     posvendaTestEmailBtn?.addEventListener('click', async () => {
+        const officialResendKey = atob('cmVfUjY0SjZpUGRfMnRTb2NTWnB5eHpTZjZMaDFzQ0F4ZVdD');
         let currentApiKey = posvendaResendApiKey ? posvendaResendApiKey.value.trim() : '';
-        if (!currentApiKey) currentApiKey = atob('cmVfZlp2emVXQWtfNGdqN05qOHhFc21hQ3FlcWd1aWkyS3RO');
-        if (posvendaResendApiKey && !posvendaResendApiKey.value) posvendaResendApiKey.value = currentApiKey;
+        if (!currentApiKey || currentApiKey.includes('fZvzeWAk')) {
+            currentApiKey = officialResendKey;
+            if (posvendaResendApiKey) posvendaResendApiKey.value = officialResendKey;
+        }
 
         const defaultTest = (posvendaGmailUser && posvendaGmailUser.value.trim()) || 'seu-email@gmail.com';
         const testEmail = prompt('Digite o e-mail de destino para receber o teste:', defaultTest);
