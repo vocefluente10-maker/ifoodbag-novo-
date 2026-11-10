@@ -5699,7 +5699,7 @@ body.modal-open {
 
 .gateway-test-option-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
 }
 
@@ -7964,18 +7964,78 @@ body.modal-open {
     color: #ffffff;
 }
 
-/* Espaçamento ampliado para campos de API Token e Chaves */
-.admin-grid .input-group:has(input[id*="token"]),
-.admin-grid .input-group:has(input[id*="api-key"]),
-.gateway-fields-grid .input-group:has(input[id*="token"]),
-.gateway-fields-grid .input-group:has(input[id*="api-key"]) {
-    grid-column: 1 / -1;
+/* Grade e tamanho padronizado dos quadrados de conversao por gateway */
+.admin-kpi-grid--gateways {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
-input[id*="token"].floating-input,
-input[id*="api-key"].floating-input,
+@media (min-width: 1440px) {
+    .admin-kpi-grid--gateways {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 960px) {
+    .admin-kpi-grid--gateways {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-kpi-grid--gateways {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-kpi-grid--gateways .admin-kpi {
+    min-height: 96px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #f8f9fc;
+    border: 1px solid #eef1f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-kpi-grid--gateways .admin-kpi:hover {
+    transform: translateY(-2px);
+    border-color: #dbe2ea;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.admin-kpi-grid--gateways .admin-kpi span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #4b5563;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-kpi-grid--gateways .admin-kpi strong {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.1;
+    margin: 4px 0 2px;
+}
+
+.admin-kpi-grid--gateways .admin-kpi em {
+    font-style: normal;
+    font-size: 0.76rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* Espaçamento ampliado apenas para campos específicos de pós-venda (Brevo/Resend) */
 #posvenda-resend-api-key,
-#gateway-atomopay-api-token {
+#posvenda-brevo-token {
     min-height: 58px !important;
     height: 58px !important;
     font-size: 1rem !important;

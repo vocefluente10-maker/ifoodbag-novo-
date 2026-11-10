@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/style.css?v=3.2" />
+  <link rel="stylesheet" href="/style.css?v=3.3" />
 <script src="/backguard.js?v=1.5"></script>
 </head>
 <body data-page="admin" data-admin="overview">
@@ -187,7 +187,7 @@
             <span class="admin-chip">PIX</span>
           </div>
           <p class="admin-hint">Compare em tempo real qual integracao converte mais pagamentos.</p>
-          <div class="admin-kpi-grid">
+          <div class="admin-kpi-grid admin-kpi-grid--gateways">
             <div class="admin-kpi">
               <span>GhostsPay</span>
               <strong id="metric-gateway-ghostspay-conv">0%</strong>
@@ -217,6 +217,16 @@
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
+              <span>AtomoPay</span>
+              <strong id="metric-gateway-atomopay-conv">0%</strong>
+              <em id="metric-gateway-atomopay-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
+              <span>Bravo Pay</span>
+              <strong id="metric-gateway-bravopay-conv">0%</strong>
+              <em id="metric-gateway-bravopay-detail">0 pagos / 0 PIX</em>
             </div>
           </div>
         </section>
