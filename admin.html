@@ -209,6 +209,11 @@
               <em id="metric-gateway-pingupag-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>LumeaPag</span>
+              <strong id="metric-gateway-lumeapag-conv">0%</strong>
+              <em id="metric-gateway-lumeapag-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -356,6 +361,34 @@
               <label for="gateway-pingupag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
             </div>
             <label class="admin-switch">
+              <input type="checkbox" id="gateway-lumeapag-enabled" />
+              <span>LumeaPag ativo</span>
+            </label>
+            <div class="input-group">
+              <input type="text" id="gateway-lumeapag-base-url" class="floating-input" placeholder=" " value="https://lumeapag.com/api" />
+              <label for="gateway-lumeapag-base-url" class="floating-label">LumeaPag Base URL</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="gateway-lumeapag-api-key" class="floating-input" placeholder=" " />
+              <label for="gateway-lumeapag-api-key" class="floating-label">LumeaPag X-API-Key</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="gateway-lumeapag-product-hash" class="floating-input" placeholder=" " />
+              <label for="gateway-lumeapag-product-hash" class="floating-label">LumeaPag Product Hash (opcional)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-lumeapag-orderbump-hash" class="floating-input" placeholder=" " />
+              <label for="gateway-lumeapag-orderbump-hash" class="floating-label">LumeaPag Orderbump Hash (opcional)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-lumeapag-source" class="floating-input" placeholder=" " />
+              <label for="gateway-lumeapag-source" class="floating-label">LumeaPag Source (padrao: api_externa)</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-lumeapag-description" class="floating-input" placeholder=" " />
+              <label for="gateway-lumeapag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+            </div>
+            <label class="admin-switch">
               <input type="checkbox" id="gateway-clownpay-enabled" />
               <span>ClownPay ativo</span>
             </label>
@@ -396,7 +429,7 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/script.js?v=11.5" defer></script>
+  <script src="/script.js?v=12.4" defer></script>
 </body>
 </html>
 

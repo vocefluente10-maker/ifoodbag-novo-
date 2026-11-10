@@ -237,7 +237,7 @@ function extractPixFieldsForStatus(gateway, payload = {}) {
 
     const isGhost = gateway === 'ghostspay';
     const isSunize = gateway === 'sunize';
-    const isParadise = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag');
+    const isParadise = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag');
     let paymentCode = '';
     let qrRaw = '';
     let paymentQrUrl = '';
@@ -359,7 +359,7 @@ function mapGatewayStatusToFrontend(gateway, statusRaw) {
     if (gateway === 'sunize') {
         return mapUtmifyStatusToFrontend(mapSunizeStatusToUtmify(statusRaw));
     }
-    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
         return mapUtmifyStatusToFrontend(mapParadiseStatusToUtmify(statusRaw));
     }
     if (gateway === 'atomopay') {
@@ -718,7 +718,7 @@ async function enqueuePaidSideEffectsFromLead({
 function resolveStatusGateway(body = {}, leadData = null, payments = {}) {
     const payload = asObject(leadData?.payload);
     const fromLead = resolveGatewayFromPayload(payload, '');
-    if (fromLead === 'ghostspay' || fromLead === 'sunize' || (fromLead === 'paradise' || fromLead === 'clownpay' || fromLead === 'pingupag') || fromLead === 'atomopay') {
+    if (fromLead === 'ghostspay' || fromLead === 'sunize' || (fromLead === 'paradise' || fromLead === 'clownpay' || fromLead === 'pingupag' || fromLead === 'lumeapag') || fromLead === 'atomopay') {
         return fromLead;
     }
     const requestedRaw = String(body.gateway || body.paymentGateway || body.provider || '').trim();
@@ -791,7 +791,7 @@ module.exports = async (req, res) => {
                 Number(gatewayConfig?.timeoutMs || 12000),
                 gateway === 'ghostspay'
                     ? 6500
-                    : (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag')
+                    : (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag')
                         ? 7000
                         : 7000
             )
@@ -905,7 +905,7 @@ module.exports = async (req, res) => {
             toIsoDate(data?.paidAt) ||
             new Date().toISOString();
         ({ paymentCode, paymentCodeBase64, paymentQrUrl } = extractPixFieldsForStatus(gateway, data));
-    } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
+    } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
         ({ response, data } = await requestParadiseStatus(statusGatewayConfig, txid));
         if (!response?.ok) {
             const status = Number(response?.status || 0);
@@ -1103,7 +1103,7 @@ module.exports = async (req, res) => {
                 : fallbackLeadAmount;
         const upsellEvent = isUpsellLead(latestLead);
         const rewardSnapshot = upsellEvent ? null : buildLeadRewardSnapshot(latestPayload);
-        const utmifyStatus = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag')
+        const utmifyStatus = (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag')
             ? mapParadiseStatusToUtmify(statusRaw)
             : gateway === 'atomopay'
                 ? mapAtomopayStatusToUtmify(statusRaw)
@@ -1137,7 +1137,7 @@ module.exports = async (req, res) => {
                 data?.data?.fee ||
                 0
             );
-        } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
+        } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
             gatewayFee = normalizeMoneyToBrl(
                 data?.fee ||
                 data?.gateway_fee ||

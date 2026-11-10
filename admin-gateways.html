@@ -148,6 +148,11 @@
               <em id="metric-gateway-pingupag-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>LumeaPag</span>
+              <strong id="metric-gateway-lumeapag-conv">0%</strong>
+              <em id="metric-gateway-lumeapag-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -250,6 +255,19 @@
                   <span class="gateway-order-state" data-gateway-order-state="pingupag">-</span>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir PinguPag"></button>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer PinguPag"></button>
+                </article>
+                <article class="gateway-order-item" data-gateway-order-item="lumeapag" draggable="true">
+                  <span class="gateway-order-index">5</span>
+                  <span class="gateway-order-handle" aria-hidden="true"></span>
+                  <span class="gateway-order-name">LumeaPag</span>
+                  <span class="gateway-order-stats" data-gateway-order-stats="lumeapag">
+                    <span class="gateway-order-stat"><strong data-gateway-order-generated="lumeapag">0</strong><em>Gerados hoje</em></span>
+                    <span class="gateway-order-stat"><strong data-gateway-order-paid="lumeapag">0</strong><em>Aprovados hoje</em></span>
+                    <span class="gateway-order-stat gateway-order-stat--conversion"><strong data-gateway-order-conversion="lumeapag">0%</strong><em>Conversao hoje</em><i><b data-gateway-order-conversion-bar="lumeapag"></b></i></span>
+                  </span>
+                  <span class="gateway-order-state" data-gateway-order-state="lumeapag">-</span>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir LumeaPag"></button>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer LumeaPag"></button>
                 </article>
                 <article class="gateway-order-item" data-gateway-order-item="atomopay" draggable="true">
                   <span class="gateway-order-index">4</span>
@@ -436,6 +454,50 @@
                   <div class="input-group">
                     <input type="text" id="gateway-pingupag-description" class="floating-input" placeholder=" " />
                     <label for="gateway-pingupag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="gateway-card" data-gateway-card="lumeapag">
+              <header class="gateway-card-header">
+                <div class="gateway-card-heading">
+                  <h3>LumeaPag</h3>
+                  <p>Gateway PIX LumeaPag com webhook nativo e tracking completo.</p>
+                </div>
+                <div class="gateway-card-actions">
+                  <label class="gateway-switch" for="gateway-lumeapag-enabled">
+                    <input type="checkbox" id="gateway-lumeapag-enabled" />
+                    <span class="gateway-switch-track" aria-hidden="true"></span>
+                    <span class="gateway-switch-text" id="gateway-lumeapag-state">Carregando</span>
+                  </label>
+                  <button type="button" class="btn-secondary gateway-config-toggle" data-gateway-config-toggle="lumeapag" aria-controls="gateway-config-lumeapag" aria-expanded="false">Configurar</button>
+                </div>
+              </header>
+              <div id="gateway-config-lumeapag" class="gateway-card-body">
+                <div class="admin-grid gateway-fields-grid">
+                  <div class="input-group">
+                    <input type="text" id="gateway-lumeapag-base-url" class="floating-input" placeholder=" " value="https://lumeapag.com/api" />
+                    <label for="gateway-lumeapag-base-url" class="floating-label">LumeaPag Base URL</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="password" id="gateway-lumeapag-api-key" class="floating-input" placeholder=" " autocomplete="new-password" />
+                    <label for="gateway-lumeapag-api-key" class="floating-label">LumeaPag X-API-Key</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="password" id="gateway-lumeapag-product-hash" class="floating-input" placeholder=" " autocomplete="new-password" />
+                    <label for="gateway-lumeapag-product-hash" class="floating-label">LumeaPag Product Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-lumeapag-orderbump-hash" class="floating-input" placeholder=" " />
+                    <label for="gateway-lumeapag-orderbump-hash" class="floating-label">LumeaPag Orderbump Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-lumeapag-source" class="floating-input" placeholder=" " />
+                    <label for="gateway-lumeapag-source" class="floating-label">LumeaPag Source (padrao: api_externa)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-lumeapag-description" class="floating-input" placeholder=" " />
+                    <label for="gateway-lumeapag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
                   </div>
                 </div>
               </div>
@@ -636,6 +698,10 @@
               <span>PinguPag</span>
             </label>
             <label class="gateway-test-option">
+              <input type="checkbox" id="gateway-test-lumeapag" />
+              <span>LumeaPag</span>
+            </label>
+            <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-clownpay" />
               <span>ClownPay</span>
             </label>
@@ -667,7 +733,7 @@
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="/script.js?v=11.5" defer></script>
+  <script src="/script.js?v=12.4" defer></script>
 </body>
 </html>
 

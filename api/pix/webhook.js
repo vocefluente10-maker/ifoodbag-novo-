@@ -523,7 +523,7 @@ function extractGatewayEvent(gateway, body = {}, query = {}) {
         };
     }
 
-    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
+    if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag' || gateway === 'lumeapag') {
         const txid = getParadiseTxid(body);
         const statusRaw = getParadiseStatus(body);
         const utmifyStatus = mapParadiseStatusToUtmify(statusRaw);
