@@ -58,6 +58,7 @@ const {
     mapLumeapagStatusToUtmify
 } = require('../../lib/lumeapag-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
+const { generateTrackingCode } = require('../../lib/email-sender');
 
 function resolveGateway(rawBody = {}, payments = {}) {
     const candidates = resolveGatewayCandidates(rawBody, payments);
@@ -1956,8 +1957,11 @@ module.exports = async (req, res) => {
             const safeRawBody = { ...(rawBody || {}) };
             delete safeRawBody.recoveryToken;
             delete safeRawBody.recoveryProof;
+            const existingTrackingCode = String(existingLead?.payload?.trackingCode || safeRawBody?.trackingCode || '').trim().toUpperCase();
+            const trackingCode = existingTrackingCode || generateTrackingCode(txid || sessionId || orderId);
             const leadWrite = await upsertLead({
                 ...safeRawBody,
+                trackingCode,
                 addPaymentInfoEventId,
                 shipping: normalizedShipping,
                 reward: normalizedReward,
@@ -2099,6 +2103,7 @@ module.exports = async (req, res) => {
 
             const responsePayload = {
                 idTransaction: txid,
+                trackingCode,
                 paymentCode,
                 paymentCodeBase64,
                 paymentQrUrl,

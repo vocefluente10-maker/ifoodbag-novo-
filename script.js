@@ -3094,17 +3094,17 @@ function initUpsell() {
             ].map((text) => `<li>${text}</li>`).join('');
         }
 
-        let trackingCode = localStorage.getItem('ifood_tracking_code');
+        let trackingCode = String(pix?.trackingCode || localStorage.getItem('ifood_tracking_code') || '').trim().toUpperCase();
         if (!trackingCode) {
-            const rawSeed = String(pix?.idTransaction || personal?.cpf || Date.now());
+            const rawSeed = String(pix?.idTransaction || pix?.txid || getLeadSessionId() || personal?.cpf || Date.now());
             let hash = 0;
             for (let i = 0; i < rawSeed.length; i++) {
                 hash = ((hash << 5) - hash) + rawSeed.charCodeAt(i);
                 hash |= 0;
             }
             trackingCode = `BR${String(Math.abs(hash)).padStart(8, '0').slice(0, 8)}IF`;
-            try { localStorage.setItem('ifood_tracking_code', trackingCode); } catch (_e) {}
         }
+        try { localStorage.setItem('ifood_tracking_code', trackingCode); } catch (_e) {}
 
         const existingTrackingBtn = document.getElementById('btn-go-to-tracking');
         if (!existingTrackingBtn && btnAccept && btnAccept.parentNode) {
@@ -8669,6 +8669,7 @@ function initAdmin() {
             const emailBody = encodeURIComponent(`Olá ${item.customerName || 'Parceiro'}!\n\nSeu pedido do Kit Entregador iFood (${item.product}) foi integrado ao lote logístico de expedição.\n\nCódigo de Rastreamento: ${item.trackingCode}\nLink do Rastreio Oficial: ${trackingUrl}\n\nPrazo operacional de entrega estimado: 8 a 15 dias úteis.\n\nQualquer dúvida, nossa equipe de suporte está à disposição.`);
             const mailtoLink = `mailto:${item.email || 'contato@cliente.com'}?subject=${emailSubject}&body=${emailBody}`;
 
+            const locationLabel = [item.city, item.state].filter(Boolean).join(' - ') || 'Não informado';
             return `
                 <tr>
                     <td><span style="font-size: 0.82rem; font-weight: 600;">${item.date}</span></td>
@@ -8677,10 +8678,11 @@ function initAdmin() {
                         <span style="font-size: 0.75rem; color: var(--text-muted);">${item.cpf}</span>
                     </td>
                     <td>
-                        <span style="font-size: 0.82rem; color: #38bdf8;">${item.email || 'email@cliente.com'}</span>
+                        <span style="font-size: 0.82rem; color: #38bdf8;">${item.email || '-'}</span>
                     </td>
                     <td>
-                        <span style="font-size: 0.82rem;">${item.city} - ${item.state}</span>
+                        <span style="font-size: 0.82rem;">${locationLabel}</span>
+                        ${item.addressPreview ? `<br/><span style="font-size: 0.72rem; color: var(--text-muted);">${item.addressPreview}</span>` : ''}
                     </td>
                     <td>
                         <span style="font-size: 0.82rem; font-weight: 600; color: #fff;">${item.product}</span><br/>
@@ -8740,6 +8742,7 @@ function initAdmin() {
 
     const loadPosvendaOrders = async () => {
         if (!posvendaTableBody) return;
+        posvendaOrdersState.items = [];
         try {
             const res = await adminFetch('/api/admin/gateway-sales?max=500');
             if (res.ok) {
@@ -8749,12 +8752,12 @@ function initAdmin() {
                     posvendaOrdersState.items = sales.map((sale) => {
                         const lead = sale.lead || {};
                         const leadShipping = lead.shipping || {};
-                        const trackingCode = generateTrackingCodeFromId(sale.txid || sale.sessionId);
+                        const trackingCode = String(lead.trackingCode || sale.trackingCode || generateTrackingCodeFromId(sale.txid || sale.sessionId)).trim().toUpperCase();
                         const rawDate = sale.paidAt || sale.createdAt || new Date().toISOString();
                         const d = new Date(rawDate);
                         const dateFormatted = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-                        const cpfDigits = String(lead.cpf || '').replace(/\\D/g, '');
+                        const cpfDigits = String(lead.cpf || '').replace(/\D/g, '');
                         const maskedCpf = cpfDigits.length === 11 ? `***.${cpfDigits.slice(3, 6)}.${cpfDigits.slice(6, 9)}-**` : '***.***.***-**';
 
                         const offerLower = String(sale.offerLabel || '').toLowerCase();
@@ -8762,15 +8765,23 @@ function initAdmin() {
                         if (offerLower.includes('bau') || offerLower.includes('baú')) slug = 'bau';
                         else if (offerLower.includes('kit')) slug = 'kit';
 
+                        const city = String(lead.city || leadShipping.city || '').trim();
+                        const state = String(lead.state || leadShipping.state || '').trim();
+                        const addressPreview = [
+                            lead.addressLine ? `${lead.addressLine}${lead.number ? `, ${lead.number}` : ''}` : '',
+                            lead.cep ? `CEP ${lead.cep}` : ''
+                        ].filter(Boolean).join(' • ');
+
                         return {
                             id: sale.txid || sale.sessionId,
                             sessionId: sale.sessionId || sale.txid,
                             date: dateFormatted,
                             customerName: lead.name || 'Parceiro iFood',
                             cpf: maskedCpf,
-                            email: lead.email || 'parceiro@entregadores-ifood.com',
-                            city: leadShipping.city || lead.city || 'São Paulo',
-                            state: leadShipping.state || lead.state || 'SP',
+                            email: lead.email || '-',
+                            city,
+                            state,
+                            addressPreview,
                             product: sale.offerLabel || 'Bag Térmica Oficial iFood Pro',
                             productSlug: slug,
                             gateway: gatewayLabelForUi(sale.gateway || 'paradise'),
@@ -8782,72 +8793,7 @@ function initAdmin() {
                 }
             }
         } catch (_e) {
-            console.warn('Erro ao carregar vendas do posvenda, usando base oficial', _e);
-        }
-
-        if (!posvendaOrdersState.items.length) {
-            posvendaOrdersState.items = [
-                {
-                    id: 'tx_audit_01',
-                    date: 'Hoje às 09:15',
-                    customerName: 'Carlos Eduardo da Silva',
-                    cpf: '***.482.910-**',
-                    email: 'carlos.eduardo@gmail.com',
-                    city: 'Barueri',
-                    state: 'SP',
-                    product: 'Bag Térmica iFood Pro 45L + Isopor',
-                    productSlug: 'bag',
-                    gateway: 'PinguPag',
-                    trackingCode: 'BR849204918IF',
-                    status: 'em_transferencia',
-                    amount: 17.73
-                },
-                {
-                    id: 'tx_audit_02',
-                    date: 'Hoje às 08:40',
-                    customerName: 'Marcos Vinicius Santos',
-                    cpf: '***.319.824-**',
-                    email: 'marcos.santos.moto@hotmail.com',
-                    city: 'Campinas',
-                    state: 'SP',
-                    product: 'Kit Entregador Pro Completo',
-                    productSlug: 'kit',
-                    gateway: 'Paradise',
-                    trackingCode: 'BR719204812IF',
-                    status: 'em_transferencia',
-                    amount: 97.90
-                },
-                {
-                    id: 'tx_audit_03',
-                    date: 'Ontem às 19:22',
-                    customerName: 'Lucas Ferreira Lima',
-                    cpf: '***.612.045-**',
-                    email: 'lucas.lima.rio@gmail.com',
-                    city: 'Rio de Janeiro',
-                    state: 'RJ',
-                    product: 'Baú de Carga para Moto iFood 80L',
-                    productSlug: 'bau',
-                    gateway: 'PinguPag',
-                    trackingCode: 'BR628491032IF',
-                    status: 'em_transferencia',
-                    amount: 39.90
-                },
-                {
-                    id: 'tx_audit_04',
-                    date: 'Ontem às 16:05',
-                    customerName: 'Rodrigo Alves Souza',
-                    cpf: '***.908.112-**',
-                    email: 'rodrigo.souza.bh@outlook.com',
-                    city: 'Belo Horizonte',
-                    state: 'MG',
-                    product: 'Bag Térmica iFood Pro 45L + Isopor',
-                    productSlug: 'bag',
-                    gateway: 'Paradise',
-                    trackingCode: 'BR519204781IF',
-                    status: 'postado',
-                    amount: 17.73
-                }
-            ];
+            console.warn('Erro ao carregar vendas do posvenda:', _e);
         }
 
         renderPosvendaTable();
@@ -8866,9 +8812,12 @@ function initAdmin() {
     posvendaRefresh?.addEventListener('click', loadPosvendaOrders);
 
     btnCopyGatewayLink?.addEventListener('click', () => {
-        const link = `${window.location.origin}/rastreio?codigo=BR849204918IF`;
+        const firstOrder = posvendaOrdersState.items[0];
+        const link = firstOrder?.trackingCode
+            ? `${window.location.origin}/rastreio?codigo=${firstOrder.trackingCode}&produto=${firstOrder.productSlug || 'bag'}`
+            : `${window.location.origin}/rastreio`;
         navigator.clipboard.writeText(link).then(() => {
-            showToast('Link do Portal de Rastreio copiado! Envie aos analistas do gateway.', 'success');
+            showToast('Link do Portal de Rastreio copiado!', 'success');
         });
     });
 

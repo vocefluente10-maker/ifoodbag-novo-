@@ -84,87 +84,85 @@ module.exports = async (req, res) => {
         companyCnpj: '14.380.200/0001-21'
     };
 
-    // Extract lead details if found in database
-    let customerName = 'Carlos Eduardo da Silva';
-    let customerCpf = cleanCpf ? formatCpfMask(cleanCpf) : '***.482.910-**';
-    let addressShort = 'São Paulo - SP';
-    let fullAddressText = 'Av. Paulista, 1200 - Apto 42, Bela Vista, São Paulo - SP, CEP: 01310-100';
-    let leadProductInput = inputProduct;
+    if (!lead) {
+        res.status(200).json({
+            ok: false,
+            foundInDatabase: false,
+            code: isCpfQuery ? '' : inputCode.toUpperCase(),
+            error: 'Nenhum pedido localizado para este CPF ou código de rastreio na base de dados.'
+        });
+        return;
+    }
+
+    const payload = lead.payload || {};
+    const personal = payload.personal || {};
+    const shipping = payload.shipping || {};
+    const extra = payload.extra || {};
+    const addressObj = payload.address || {};
+
+    const customerName = String(lead.name || personal.name || 'Parceiro iFood').trim();
+    const rawLeadCpf = String(lead.cpf || personal.cpf || cleanCpf || '').replace(/\D/g, '');
+    const customerCpf = rawLeadCpf ? formatCpfMask(rawLeadCpf) : '***.***.***-**';
+
+    const cityLine = String(addressObj.cityLine || '').trim();
+    const [parsedCityFromLine, parsedStateFromLine] = cityLine.includes(' - ')
+        ? cityLine.split(' - ').map((s) => s.trim())
+        : [cityLine, ''];
+
+    let street = String(lead.address_line || addressObj.street || addressObj.streetLine || shipping.address || '').trim();
+    const number = String(lead.number || extra.number || shipping.number || '').trim();
+    const complement = String(lead.complement || extra.complement || shipping.complement || '').trim();
+    const neighborhood = String(lead.neighborhood || addressObj.neighborhood || shipping.neighborhood || '').trim();
+    const city = String(lead.city || addressObj.city || shipping.city || parsedCityFromLine || '').trim();
+    const state = String(lead.state || addressObj.state || shipping.state || parsedStateFromLine || '').trim().toUpperCase();
+    const rawZip = String(lead.cep || addressObj.cep || shipping.cep || '').replace(/\D/g, '');
+    const zip = rawZip.length === 8 ? `${rawZip.slice(0, 5)}-${rawZip.slice(5)}` : String(lead.cep || addressObj.cep || shipping.cep || '').trim();
+    const reference = String(lead.reference || extra.reference || '').trim();
+
+    if (street && neighborhood && street.toLowerCase().endsWith(`, ${neighborhood.toLowerCase()}`)) {
+        street = street.slice(0, -(neighborhood.length + 2)).trim();
+    }
+
+    const addressShort = city && state ? `${city} - ${state}` : (city || state || 'Endereço em processamento');
+
+    const addrParts = [
+        street ? `${street}${number ? `, Nº ${number}` : (extra.noNumber ? ', s/n' : '')}${complement ? ` (${complement})` : ''}` : '',
+        neighborhood ? `Bairro ${neighborhood}` : '',
+        city && state ? `${city} - ${state}` : (city || state || ''),
+        zip ? `CEP: ${zip}` : '',
+        reference ? `Ref: ${reference}` : ''
+    ].filter(Boolean);
+
+    const fullAddressText = addrParts.length > 0
+        ? addrParts.join(', ')
+        : 'Endereço em conferência logística';
+
+    const leadProductInput = String(payload.reward?.id || payload.reward?.name || payload.offerLabel || payload.product || inputProduct || '');
+
     let targetCode = '';
     let isNewCodeGenerated = false;
-    let purchaseDate = null;
-
-    if (lead) {
-        const payload = lead.payload || {};
-        const personal = payload.personal || {};
-        const shipping = payload.shipping || {};
-        const extra = payload.extra || {};
-        const addressObj = payload.address || {};
-
-        customerName = String(lead.name || personal.name || 'Parceiro iFood').trim();
-        const rawLeadCpf = String(lead.cpf || personal.cpf || cleanCpf || '').replace(/\D/g, '');
-        customerCpf = formatCpfMask(rawLeadCpf);
-
-        // Address resolution from database
-        const street = lead.address_line || addressObj.street || addressObj.streetLine || shipping.address || '';
-        const number = lead.number || extra.number || shipping.number || '';
-        const complement = lead.complement || extra.complement || shipping.complement || '';
-        const neighborhood = lead.neighborhood || addressObj.neighborhood || shipping.neighborhood || '';
-        const city = lead.city || addressObj.city || shipping.city || '';
-        const state = lead.state || addressObj.state || shipping.state || '';
-        const zip = lead.cep || addressObj.cep || shipping.cep || '';
-
-        addressShort = city && state ? `${city} - ${state}` : (city || state || 'Brasil');
-
-        const addrParts = [
-            street ? `${street}${number ? `, Nº ${number}` : ''}${complement ? ` (${complement})` : ''}` : '',
-            neighborhood ? `Bairro ${neighborhood}` : '',
-            city && state ? `${city} - ${state}` : (city || state || ''),
-            zip ? `CEP: ${zip}` : ''
-        ].filter(Boolean);
-
-        if (addrParts.length > 0) {
-            fullAddressText = addrParts.join(', ');
-        }
-
-        // Product resolution from database
-        leadProductInput = String(payload.reward?.id || payload.reward?.name || payload.offerLabel || payload.product || inputProduct || '');
-
-        // Tracking code resolution from database or generate automatically
-        if (payload.trackingCode) {
-            targetCode = String(payload.trackingCode).trim().toUpperCase();
-        } else {
-            targetCode = generateTrackingCode(lead.pix_txid || lead.session_id || rawLeadCpf || Date.now());
-            isNewCodeGenerated = true;
-
-            // Automatically persist generated tracking code into lead's record in Supabase
-            if (lead.session_id) {
-                updateLeadBySessionId(lead.session_id, {
-                    payload: {
-                        ...payload,
-                        trackingCode: targetCode
-                    }
-                }).catch(() => null);
-            }
-        }
-
-        if (lead.created_at || lead.updated_at) {
-            purchaseDate = new Date(lead.created_at || lead.updated_at);
-        }
+    if (payload.trackingCode) {
+        targetCode = String(payload.trackingCode).trim().toUpperCase();
     } else {
-        // Fallback when lead not found in DB
-        if (isCpfQuery) {
-            targetCode = generateTrackingCode(cleanCpf);
-            customerCpf = formatCpfMask(cleanCpf);
-            isNewCodeGenerated = true;
-        } else if (inputCode) {
-            targetCode = inputCode.toUpperCase();
-        } else {
-            targetCode = 'BR849204918IF';
+        targetCode = generateTrackingCode(lead.pix_txid || lead.session_id || rawLeadCpf || Date.now());
+        isNewCodeGenerated = true;
+
+        if (lead.session_id) {
+            updateLeadBySessionId(lead.session_id, {
+                payload: {
+                    ...payload,
+                    trackingCode: targetCode
+                }
+            }).catch(() => null);
         }
     }
 
-    const seed = targetCode + (cleanCpf || '');
+    let purchaseDate = null;
+    if (lead.created_at || lead.updated_at) {
+        purchaseDate = new Date(lead.created_at || lead.updated_at);
+    }
+
+    const seed = targetCode + (rawLeadCpf || cleanCpf || '');
     const numSeed = hashString(seed);
 
     // Delivery delay calculation: 8 to 16 business days ahead (prolonged delivery)
@@ -233,13 +231,14 @@ module.exports = async (req, res) => {
         };
     }
 
+    const destinationLabel = addressShort !== 'Endereço em processamento' ? addressShort : 'Endereço de destino';
     const orderData = {
         ok: true,
-        foundInDatabase: !!lead,
-        matchType: matchType || (isCpfQuery ? 'cpf_generated' : 'code_lookup'),
+        foundInDatabase: true,
+        matchType: matchType || 'code_lookup',
         isNewCodeGenerated: isNewCodeGenerated,
         code: targetCode.toUpperCase(),
-        carrier: posvendaConfig.carrierDefault || 'Correios Sedex / iFood Logística Express',
+        carrier: String(lead.shipping_name || shipping.name || posvendaConfig.carrierDefault || 'Correios Sedex / iFood Logística Express').trim(),
         status: 'em_transferencia',
         statusLabel: 'Em transferência para Unidade de Triagem e Distribuição',
         statusCode: 2,
@@ -264,36 +263,39 @@ module.exports = async (req, res) => {
             name: customerName,
             document: customerCpf,
             address: fullAddressText,
-            addressShort: addressShort
+            addressShort: addressShort,
+            city,
+            state,
+            cep: zip
         },
         deliveryNotice: 'Devido ao grande volume de expedição nos Centros de Distribuição, o prazo operacional de entrega é de 8 a 15 dias úteis. As atualizações oficiais são enviadas para o seu e-mail cadastrado.',
         timeline: [
             {
-                step: 'Em transferência interestadual para Unidade de Triagem',
+                step: 'Em transferência para Unidade de Triagem de destino',
                 status: 'current',
                 date: formatDate(dispatchedDate),
-                location: 'Centro de Distribuição Barueri/SP → Centro de Triagem Regional',
-                description: 'Carga em rota de transferência interestadual em veículo monitorado via satélite. Próxima atualização ao dar entrada na central de triagem.'
+                location: `Centro de Distribuição Regional → Unidade Destino (${destinationLabel})`,
+                description: `Carga em rota de transferência com destino final para ${destinationLabel}. Próxima atualização ao dar entrada na base de distribuição local.`
             },
             {
                 step: 'Objeto postado e integrado ao lote logístico',
                 status: 'completed',
                 date: formatDate(packedDate),
-                location: 'Centro de Distribuição iFood - Barueri/SP',
+                location: 'Centro de Distribuição iFood Logística',
                 description: 'Volume conferido, embalado e despachado pela transportadora parceira com seguro de carga.'
             },
             {
                 step: 'Nota Fiscal Eletrônica (DANFE) emitida',
                 status: 'completed',
                 date: formatDate(nfeDate),
-                location: 'Secretaria da Fazenda (SEFAZ/SP)',
+                location: state ? `Secretaria da Fazenda Estadual (SEFAZ/${state})` : 'Secretaria da Fazenda Estadual (SEFAZ)',
                 description: `DANFE autorizada sob a Chave de Acesso: ${generateNfeKey(seed).slice(0, 24)}...`
             },
             {
                 step: 'Pagamento aprovado via PIX & Pedido registrado',
                 status: 'completed',
                 date: formatDate(effectivePurchaseDate),
-                location: 'Gateway de Pagamento Integrado',
+                location: payload?.pixGateway ? `Gateway PIX (${String(payload.pixGateway).toUpperCase()})` : 'Gateway de Pagamento Integrado',
                 description: 'Transação PIX aprovada com sucesso. Pedido enviado para a esteira de separação.'
             }
         ]
