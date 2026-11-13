@@ -1183,7 +1183,7 @@ module.exports = async (req, res) => {
 
         const items = [
             {
-                title: validRecoveryGrant ? 'Condicao especial de recuperacao do pedido' : 'Frete Bag do iFood',
+                title: validRecoveryGrant ? 'Condicao especial de recuperacao do pedido' : 'Frete Bag',
                 quantity: 1,
                 unitPrice: Number(shippingPrice.toFixed(2)),
                 tangible: false
@@ -1356,7 +1356,7 @@ module.exports = async (req, res) => {
                 },
                 postbackUrl: resolveGhostspayPostbackUrl(req, gatewayConfig),
                 ip: extractIp(req),
-                description: upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag',
+                description: upsellEnabled ? 'Bag - Upsell' : 'Bag',
                 metadata: {
                     gateway: 'ghostspay',
                     orderId,
@@ -1551,8 +1551,9 @@ module.exports = async (req, res) => {
                 const lumeapagPayload = {
                     product: {
                         name: String(
-                            gatewayConfig.description ||
-                            (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                            (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
+                                ? gatewayConfig.description
+                                : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
                         ).trim(),
                         value: Number(Number(totalAmount).toFixed(2))
                     },
@@ -1636,8 +1637,9 @@ module.exports = async (req, res) => {
                 const paradisePayload = {
                     amount: Math.max(1, Math.round(totalAmount * 100)),
                     description: String(
-                        gatewayConfig.description ||
-                        (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                        (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
+                            ? gatewayConfig.description
+                            : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
                     ).trim(),
                     reference: externalId,
                     customer: {
@@ -1863,8 +1865,9 @@ module.exports = async (req, res) => {
                         phone
                     },
                     description: String(
-                        gatewayConfig.description ||
-                        (upsellEnabled ? 'Pedido iFood Bag - Upsell' : 'Pedido iFood Bag')
+                        (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
+                            ? gatewayConfig.description
+                            : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
                     ).trim().slice(0, 300),
                     external_reference: externalId,
                     expires_in: Math.max(60, Math.min(86400, Number(gatewayConfig.expiresIn || 3600) || 3600))
