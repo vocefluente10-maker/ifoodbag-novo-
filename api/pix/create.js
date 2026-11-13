@@ -409,20 +409,29 @@ function normalizeGatewayShippingBasePrice(shipping = {}, shippingPrice = 0) {
 const REWARD_CATALOG = {
     bag: {
         id: 'bag',
-        name: 'Bag do iFood',
+        name: 'Bag',
         extraPrice: 0
     },
     bau: {
         id: 'bau',
-        name: 'Ba\u00fa do iFood',
+        name: 'Baú',
         extraPrice: 39.9
     },
     kit_entregador: {
         id: 'kit_entregador',
-        name: 'Kit Entregador iFood',
+        name: 'Kit Pro Entregador',
         extraPrice: 97.9
     }
 };
+
+function resolveSafeGatewayProductName(description, isUpsell = false) {
+    const fallback = isUpsell ? 'Bag - Upsell' : 'Bag';
+    const clean = String(description || '').trim();
+    if (!clean || /ifood/i.test(clean) || /pedido/i.test(clean) || /teste manual/i.test(clean)) {
+        return fallback;
+    }
+    return clean;
+}
 
 function resolveReward(rawReward = null) {
     const source = rawReward && typeof rawReward === 'object' && !Array.isArray(rawReward)
@@ -1359,7 +1368,7 @@ module.exports = async (req, res) => {
                 }
 
             const ghostItems = items.map((item) => ({
-                title: item.title,
+                title: resolveSafeGatewayProductName(item.title, upsellEnabled),
                 quantity: Number(item.quantity || 1),
                 unitPrice: Math.max(1, Math.round(Number(item.unitPrice || 0) * 100))
             }));
@@ -1454,8 +1463,8 @@ module.exports = async (req, res) => {
 
                 const sunizeItems = items.map((item, index) => ({
                     id: `${normalizedShipping?.id || 'item'}-${index + 1}`,
-                    title: String(item.title || 'Item'),
-                    description: String(item.title || 'Item'),
+                    title: resolveSafeGatewayProductName(item.title, upsellEnabled),
+                    description: resolveSafeGatewayProductName(item.title, upsellEnabled),
                     price: Number(Number(item.unitPrice || 0).toFixed(2)),
                     quantity: Number(item.quantity || 1),
                     is_physical: false
@@ -1575,11 +1584,7 @@ module.exports = async (req, res) => {
 
                 const lumeapagPayload = {
                     product: {
-                        name: String(
-                            (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
-                                ? gatewayConfig.description
-                                : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
-                        ).trim(),
+                        name: resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled),
                         value: Number(Number(totalAmount).toFixed(2))
                     },
                     customer: lumeapagCustomer,
@@ -1661,10 +1666,7 @@ module.exports = async (req, res) => {
                 const rawDoc = ensureValidCPF(cpf);
                 const rawPhone = String(phone || '').replace(/\D/g, '');
                 const atlasAmount = Math.max(5.00, Number(Number(totalAmount).toFixed(2)));
-
-                const defaultProductName = upsellEnabled ? 'Bag - Upsell' : 'Bag';
-                const rawDescription = String(gatewayConfig.description || '').trim();
-                const productName = (rawDescription && rawDescription !== 'Pedido iFood Bag') ? rawDescription : defaultProductName;
+                const productName = resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled);
 
                 const host = String(req?.headers?.['x-forwarded-host'] || req?.headers?.host || 'entregadoresifood.vercel.app').trim();
                 const checkoutUrl = `https://${host}/checkout`;
@@ -1759,11 +1761,7 @@ module.exports = async (req, res) => {
 
                 const paradisePayload = {
                     amount: Math.max(1, Math.round(totalAmount * 100)),
-                    description: String(
-                        (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
-                            ? gatewayConfig.description
-                            : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
-                    ).trim(),
+                    description: resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled),
                     reference: externalId,
                     customer: {
                         name,
@@ -1987,11 +1985,7 @@ module.exports = async (req, res) => {
                         cpf,
                         phone
                     },
-                    description: String(
-                        (gatewayConfig.description && gatewayConfig.description !== 'Pedido iFood Bag')
-                            ? gatewayConfig.description
-                            : (upsellEnabled ? 'Bag - Upsell' : 'Bag')
-                    ).trim().slice(0, 300),
+                    description: resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled).slice(0, 300),
                     external_reference: externalId,
                     expires_in: Math.max(60, Math.min(86400, Number(gatewayConfig.expiresIn || 3600) || 3600))
                 };
