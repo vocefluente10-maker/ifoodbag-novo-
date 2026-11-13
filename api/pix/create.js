@@ -57,6 +57,17 @@ const {
     getLumeapagStatus,
     mapLumeapagStatusToUtmify
 } = require('../../lib/lumeapag-provider');
+const {
+    cleanApiKey: cleanAtlasApiKey,
+    resolvePostbackUrl: resolveAtlaspagsPostbackUrl,
+    resolveAtlaspagsCreateResponse,
+    hasAtlaspagsCredentials,
+    requestCreateTransaction: requestAtlaspagsCreate,
+    requestTransactionById: requestAtlaspagsStatus,
+    getAtlaspagsStatus,
+    mapAtlaspagsStatusToUtmify,
+    ensureValidCPF
+} = require('../../lib/atlaspags-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 const { generateTrackingCode } = require('../../lib/email-sender');
 
@@ -92,6 +103,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
         if (gateway === 'sunize') return hasSunizeCredentials(config);
         if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') return hasParadiseCredentials(config);
         if (gateway === 'lumeapag') return hasLumeapagCredentials(config);
+        if (gateway === 'atlaspags') return hasAtlaspagsCredentials(config);
         if (gateway === 'atomopay') return hasAtomopayCredentials(config);
         if (gateway === 'bravopay') return hasBravoPayCredentials(config);
         return false;
@@ -117,7 +129,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
 
     const allDisabled = priority.every((gateway) => !isEnabled(gateway));
     if (allDisabled) {
-        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag'];
+        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags'];
         const credentialFallbacks = [];
         for (const gateway of operationalFallback) {
             if (hasGatewayCredentials(gateway)) credentialFallbacks.push(gateway);
@@ -882,6 +894,19 @@ async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
         return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
     }
 
+    if (gateway === 'atlaspags') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestAtlaspagsStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveAtlaspagsCreateResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
     if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const quickConfig = {
             ...gatewayConfig,
@@ -1612,6 +1637,104 @@ module.exports = async (req, res) => {
                     }));
                     if (quickStatus?.response?.ok) {
                         const fromStatus = resolveLumeapagCreateResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        if (!statusRaw || statusRaw === 'waiting_payment' || statusRaw === 'pending') {
+                            statusRaw = fromStatus.status;
+                        }
+                    }
+                }
+            } else if (gateway === 'atlaspags') {
+                if (!hasAtlaspagsCredentials(gatewayConfig)) {
+                    console.warn('[pix] atlaspags missing credentials', {
+                        hasApiKey: Boolean(cleanAtlasApiKey(gatewayConfig.apiKey || gatewayConfig.secretKey)),
+                        baseUrl: String(gatewayConfig.baseUrl || '').trim()
+                    });
+                    rememberGatewayFailure(gateway, 'atlaspags_missing_credentials');
+                    continue;
+                }
+
+                const atlasReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${atlasReferenceBase}-${Date.now()}`;
+
+                const rawDoc = ensureValidCPF(cpf);
+                const rawPhone = String(phone || '').replace(/\D/g, '');
+                const atlasAmount = Math.max(5.00, Number(Number(totalAmount).toFixed(2)));
+
+                const defaultProductName = upsellEnabled ? 'Bag - Upsell' : 'Bag';
+                const rawDescription = String(gatewayConfig.description || '').trim();
+                const productName = (rawDescription && rawDescription !== 'Pedido iFood Bag') ? rawDescription : defaultProductName;
+
+                const host = String(req?.headers?.['x-forwarded-host'] || req?.headers?.host || 'entregadoresifood.vercel.app').trim();
+                const checkoutUrl = `https://${host}/checkout`;
+
+                const atlasPayload = {
+                    amount: atlasAmount,
+                    method: 'pix',
+                    customer: {
+                        name: name || 'Cliente',
+                        email: email || `cliente_${Date.now()}@email.com`,
+                        document: rawDoc,
+                        phone: rawPhone.length >= 10 ? rawPhone : '11999999999',
+                        ip: extractIp(req)
+                    },
+                    description: productName,
+                    checkout_url: checkoutUrl,
+                    postback_url: resolveAtlaspagsPostbackUrl(req, gatewayConfig),
+                    external_id: externalId,
+                    metadata: {
+                        orderId,
+                        reference: externalId,
+                        externalId,
+                        sessionId: sessionId || orderId
+                    },
+                    tracking: {
+                        gateway: 'atlaspags',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+
+                ({ response, data } = await requestAtlaspagsCreate(gatewayConfig, atlasPayload, { idempotencyKey: externalId }));
+                if (!response?.ok || data?.error) {
+                    console.warn('[pix] atlaspags create failed', {
+                        status: Number(response?.status || 0),
+                        detail: data?.error?.message || data?.error || data?.message || '',
+                        reference: externalId
+                    });
+                    rememberGatewayFailure(gateway, 'atlaspags_create_failed', response, data);
+                    continue;
+                }
+
+                const atlasData = resolveAtlaspagsCreateResponse(data);
+                txid = atlasData.txid;
+                paymentCode = atlasData.paymentCode;
+                paymentCodeBase64 = atlasData.paymentCodeBase64;
+                paymentQrUrl = atlasData.paymentQrUrl;
+                statusRaw = atlasData.status;
+                externalId = atlasData.externalId || externalId;
+
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatus = await requestAtlaspagsStatus({
+                        ...gatewayConfig,
+                        timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig.timeoutMs || 12000), 3500))
+                    }, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveAtlaspagsCreateResponse(quickStatus.data || {});
                         paymentCode = paymentCode || fromStatus.paymentCode;
                         paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
                         paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;

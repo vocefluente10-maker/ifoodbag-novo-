@@ -4363,15 +4363,19 @@ function initAdmin() {
     const gatewayClownPayEnabled = document.getElementById('gateway-clownpay-enabled');
     const gatewayPingupagEnabled = document.getElementById('gateway-pingupag-enabled');
     const gatewayLumeapagEnabled = document.getElementById('gateway-lumeapag-enabled');
+    const gatewayAtlaspagsEnabled = document.getElementById('gateway-atlaspags-enabled');
     const gatewayParadiseBaseUrl = document.getElementById('gateway-paradise-base-url');
     const gatewayClownPayBaseUrl = document.getElementById('gateway-clownpay-base-url');
     const gatewayPingupagBaseUrl = document.getElementById('gateway-pingupag-base-url');
     const gatewayLumeapagBaseUrl = document.getElementById('gateway-lumeapag-base-url');
+    const gatewayAtlaspagsBaseUrl = document.getElementById('gateway-atlaspags-base-url');
+    const gatewayAtlaspagsPublicKey = document.getElementById('gateway-atlaspags-public-key');
     const gatewayParadiseApiKey = document.getElementById('gateway-paradise-api-key');
     const gatewayClownPaySubaccountApiKey = document.getElementById('gateway-clownpay-subaccount-api-key');
     const gatewayClownPayApiKey = document.getElementById('gateway-clownpay-api-key');
     const gatewayPingupagApiKey = document.getElementById('gateway-pingupag-api-key');
     const gatewayLumeapagApiKey = document.getElementById('gateway-lumeapag-api-key');
+    const gatewayAtlaspagsApiKey = document.getElementById('gateway-atlaspags-api-key');
     const gatewayParadiseProductHash = document.getElementById('gateway-paradise-product-hash');
     const gatewayClownPayProductHash = document.getElementById('gateway-clownpay-product-hash');
     const gatewayPingupagProductHash = document.getElementById('gateway-pingupag-product-hash');
@@ -4388,6 +4392,7 @@ function initAdmin() {
     const gatewayClownPayDescription = document.getElementById('gateway-clownpay-description');
     const gatewayPingupagDescription = document.getElementById('gateway-pingupag-description');
     const gatewayLumeapagDescription = document.getElementById('gateway-lumeapag-description');
+    const gatewayAtlaspagsDescription = document.getElementById('gateway-atlaspags-description');
     const gatewayAtomopayEnabled = document.getElementById('gateway-atomopay-enabled');
     const gatewayAtomopayBaseUrl = document.getElementById('gateway-atomopay-base-url');
     const gatewayAtomopayApiToken = document.getElementById('gateway-atomopay-api-token');
@@ -4412,6 +4417,7 @@ function initAdmin() {
     const gatewayClownPayState = document.getElementById('gateway-clownpay-state');
     const gatewayPingupagState = document.getElementById('gateway-pingupag-state');
     const gatewayLumeapagState = document.getElementById('gateway-lumeapag-state');
+    const gatewayAtlaspagsState = document.getElementById('gateway-atlaspags-state');
     const gatewayAtomopayState = document.getElementById('gateway-atomopay-state');
     const gatewayBravoPayState = document.getElementById('gateway-bravopay-state');
     const gatewayCards = Array.from(document.querySelectorAll('[data-gateway-card]'));
@@ -4426,6 +4432,7 @@ function initAdmin() {
     const gatewayTestClownPay = document.getElementById('gateway-test-clownpay');
     const gatewayTestPingupag = document.getElementById('gateway-test-pingupag');
     const gatewayTestLumeapag = document.getElementById('gateway-test-lumeapag');
+    const gatewayTestAtlaspags = document.getElementById('gateway-test-atlaspags');
     const gatewayTestAtomopay = document.getElementById('gateway-test-atomopay');
     const gatewayTestBravoPay = document.getElementById('gateway-test-bravopay');
     const gatewayTestGenerate = document.getElementById('gateway-test-generate');
@@ -4537,10 +4544,12 @@ function initAdmin() {
     const metricGatewayClownPayConv = document.getElementById('metric-gateway-clownpay-conv');
     const metricGatewayPingupagConv = document.getElementById('metric-gateway-pingupag-conv');
     const metricGatewayLumeapagConv = document.getElementById('metric-gateway-lumeapag-conv');
+    const metricGatewayAtlaspagsConv = document.getElementById('metric-gateway-atlaspags-conv');
     const metricGatewayParadiseDetail = document.getElementById('metric-gateway-paradise-detail');
     const metricGatewayClownPayDetail = document.getElementById('metric-gateway-clownpay-detail');
     const metricGatewayPingupagDetail = document.getElementById('metric-gateway-pingupag-detail');
     const metricGatewayLumeapagDetail = document.getElementById('metric-gateway-lumeapag-detail');
+    const metricGatewayAtlaspagsDetail = document.getElementById('metric-gateway-atlaspags-detail');
     const metricGatewayAtomopayConv = document.getElementById('metric-gateway-atomopay-conv');
     const metricGatewayAtomopayDetail = document.getElementById('metric-gateway-atomopay-detail');
     const metricGatewayBravoPayConv = document.getElementById('metric-gateway-bravopay-conv');
@@ -4646,6 +4655,7 @@ function initAdmin() {
         clownpay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         pingupag: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         lumeapag: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
+        atlaspags: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         atomopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         bravopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 }
     });
@@ -4925,6 +4935,7 @@ function initAdmin() {
         if (normalized === 'clownpay') return 'clownpay';
         if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'lumeapag') return 'lumeapag';
+        if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return 'ghostspay';
@@ -4938,6 +4949,7 @@ function initAdmin() {
         if (normalized === 'clownpay') return 'clownpay';
         if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'lumeapag') return 'lumeapag';
+        if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return '';
@@ -4951,12 +4963,13 @@ function initAdmin() {
         if (normalized === 'clownpay') return 'ClownPay';
         if (normalized === 'pingupag') return 'PinguPag';
         if (normalized === 'lumeapag') return 'LumeaPag';
+        if (normalized === 'atlaspags') return 'AtlasPags';
         if (normalized === 'atomopay') return 'AtomoPay';
         if (normalized === 'bravopay') return 'Bravo Pay';
         return 'GhostsPay';
     };
 
-    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'pingupag', 'lumeapag', 'atomopay', 'bravopay'];
+    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'atomopay', 'bravopay'];
 
     const normalizeGatewayOrderForUi = (value, fallback = 'ghostspay') => {
         const rawList = Array.isArray(value)
@@ -4998,6 +5011,7 @@ function initAdmin() {
         if (normalized === 'clownpay') return gatewayClownPayEnabled;
         if (normalized === 'pingupag') return gatewayPingupagEnabled;
         if (normalized === 'lumeapag') return gatewayLumeapagEnabled;
+        if (normalized === 'atlaspags') return gatewayAtlaspagsEnabled;
         if (normalized === 'atomopay') return gatewayAtomopayEnabled;
         if (normalized === 'bravopay') return gatewayBravoPayEnabled;
         return null;
@@ -5032,6 +5046,7 @@ function initAdmin() {
             clownpay: { ...base.clownpay, ...(source.clownpay || {}) },
             pingupag: { ...base.pingupag, ...(source.pingupag || {}) },
             lumeapag: { ...base.lumeapag, ...(source.lumeapag || {}) },
+            atlaspags: { ...base.atlaspags, ...(source.atlaspags || {}) },
             atomopay: { ...base.atomopay, ...(source.atomopay || {}) },
             bravopay: { ...base.bravopay, ...(source.bravopay || {}) }
         };
@@ -5461,6 +5476,7 @@ function initAdmin() {
             const clownpay = gateways.clownpay || {};
             const pingupag = gateways.pingupag || {};
             const lumeapag = gateways.lumeapag || {};
+            const atlaspags = gateways.atlaspags || {};
             const atomopay = gateways.atomopay || {};
             const bravopay = gateways.bravopay || {};
             const gatewayOrder = normalizeGatewayOrderForUi(payments.gatewayOrder || [], payments.activeGateway || 'ghostspay');
@@ -5505,6 +5521,11 @@ function initAdmin() {
             if (gatewayLumeapagOrderbumpHash) gatewayLumeapagOrderbumpHash.value = lumeapag.orderbumpHash || '';
             if (gatewayLumeapagSource) gatewayLumeapagSource.value = lumeapag.source || '';
             if (gatewayLumeapagDescription) gatewayLumeapagDescription.value = lumeapag.description || '';
+            if (gatewayAtlaspagsEnabled) gatewayAtlaspagsEnabled.checked = !!atlaspags.enabled;
+            if (gatewayAtlaspagsBaseUrl) gatewayAtlaspagsBaseUrl.value = atlaspags.baseUrl || '';
+            if (gatewayAtlaspagsPublicKey) gatewayAtlaspagsPublicKey.value = atlaspags.publicKey || '';
+            if (gatewayAtlaspagsApiKey) gatewayAtlaspagsApiKey.value = atlaspags.apiKey || atlaspags.secretKey || '';
+            if (gatewayAtlaspagsDescription) gatewayAtlaspagsDescription.value = atlaspags.description || '';
             if (gatewayAtomopayEnabled) gatewayAtomopayEnabled.checked = !!atomopay.enabled;
             if (gatewayAtomopayBaseUrl) gatewayAtomopayBaseUrl.value = atomopay.baseUrl || '';
             if (gatewayAtomopayApiToken) gatewayAtomopayApiToken.value = atomopay.apiToken || '';
@@ -5745,6 +5766,7 @@ function initAdmin() {
         if (gatewayTestClownPay?.checked) gateways.push('clownpay');
         if (gatewayTestPingupag?.checked) gateways.push('pingupag');
         if (gatewayTestLumeapag?.checked) gateways.push('lumeapag');
+        if (gatewayTestAtlaspags?.checked) gateways.push('atlaspags');
         if (gatewayTestAtomopay?.checked) gateways.push('atomopay');
         if (gatewayTestBravoPay?.checked) gateways.push('bravopay');
         return gateways;
@@ -6626,6 +6648,7 @@ function initAdmin() {
             const currentClownPay = getCurrentGatewaySettings('clownpay');
             const currentPingupag = getCurrentGatewaySettings('pingupag');
             const currentLumeapag = getCurrentGatewaySettings('lumeapag');
+            const currentAtlaspags = getCurrentGatewaySettings('atlaspags');
             const currentAtomopay = getCurrentGatewaySettings('atomopay');
             const currentBravoPay = getCurrentGatewaySettings('bravopay');
             payload.payments = {
@@ -6689,6 +6712,15 @@ function initAdmin() {
                         orderbumpHash: readInputSetting(gatewayLumeapagOrderbumpHash, currentLumeapag.orderbumpHash),
                         source: readInputSetting(gatewayLumeapagSource, currentLumeapag.source),
                         description: readInputSetting(gatewayLumeapagDescription, currentLumeapag.description)
+                    },
+                    atlaspags: {
+                        ...(currentSettings?.payments?.gateways?.atlaspags || {}),
+                        enabled: readCheckboxSetting(gatewayAtlaspagsEnabled, currentAtlaspags.enabled),
+                        baseUrl: readInputSetting(gatewayAtlaspagsBaseUrl, currentAtlaspags.baseUrl),
+                        publicKey: readInputSetting(gatewayAtlaspagsPublicKey, currentAtlaspags.publicKey),
+                        apiKey: readInputSetting(gatewayAtlaspagsApiKey, currentAtlaspags.apiKey || currentAtlaspags.secretKey),
+                        secretKey: readInputSetting(gatewayAtlaspagsApiKey, currentAtlaspags.secretKey || currentAtlaspags.apiKey),
+                        description: readInputSetting(gatewayAtlaspagsDescription, currentAtlaspags.description)
                     },
                     atomopay: {
                         ...(currentSettings?.payments?.gateways?.atomopay || {}),
@@ -7783,6 +7815,7 @@ function initAdmin() {
         const clownpayStats = metrics.gatewayStats.clownpay || { pix: 0, paid: 0 };
         const pingupagStats = metrics.gatewayStats.pingupag || { pix: 0, paid: 0 };
         const lumeapagStats = metrics.gatewayStats.lumeapag || { pix: 0, paid: 0 };
+        const atlaspagsStats = metrics.gatewayStats.atlaspags || { pix: 0, paid: 0 };
         const atomopayStats = metrics.gatewayStats.atomopay || { pix: 0, paid: 0 };
         const bravoPayStats = metrics.gatewayStats.bravopay || { pix: 0, paid: 0 };
         const ghostConv = ghostStats.pix ? Math.round((Number(ghostStats.paid || 0) / Number(ghostStats.pix || 0)) * 100) : 0;
@@ -7791,6 +7824,7 @@ function initAdmin() {
         const clownpayConv = clownpayStats.pix ? Math.round((Number(clownpayStats.paid || 0) / Number(clownpayStats.pix || 0)) * 100) : 0;
         const pingupagConv = pingupagStats.pix ? Math.round((Number(pingupagStats.paid || 0) / Number(pingupagStats.pix || 0)) * 100) : 0;
         const lumeapagConv = lumeapagStats.pix ? Math.round((Number(lumeapagStats.paid || 0) / Number(lumeapagStats.pix || 0)) * 100) : 0;
+        const atlaspagsConv = atlaspagsStats.pix ? Math.round((Number(atlaspagsStats.paid || 0) / Number(atlaspagsStats.pix || 0)) * 100) : 0;
         const atomopayConv = atomopayStats.pix ? Math.round((Number(atomopayStats.paid || 0) / Number(atomopayStats.pix || 0)) * 100) : 0;
         const bravoPayConv = bravoPayStats.pix ? Math.round((Number(bravoPayStats.paid || 0) / Number(bravoPayStats.pix || 0)) * 100) : 0;
 
@@ -7805,6 +7839,7 @@ function initAdmin() {
         if (metricGatewayParadiseConv) metricGatewayParadiseConv.textContent = `${paradiseConv}%`;
         if (metricGatewayPingupagConv) metricGatewayPingupagConv.textContent = `${pingupagConv}%`;
         if (metricGatewayLumeapagConv) metricGatewayLumeapagConv.textContent = `${lumeapagConv}%`;
+        if (metricGatewayAtlaspagsConv) metricGatewayAtlaspagsConv.textContent = `${atlaspagsConv}%`;
         if (metricGatewayClownPayConv) metricGatewayClownPayConv.textContent = `${clownpayConv}%`;
         if (metricGatewayParadiseDetail) {
             metricGatewayParadiseDetail.textContent = `${Number(paradiseStats.paid || 0)} pagos / ${Number(paradiseStats.pix || 0)} PIX`;
@@ -7814,6 +7849,9 @@ function initAdmin() {
         }
         if (metricGatewayLumeapagDetail) {
             metricGatewayLumeapagDetail.textContent = `${Number(lumeapagStats.paid || 0)} pagos / ${Number(lumeapagStats.pix || 0)} PIX`;
+        }
+        if (metricGatewayAtlaspagsDetail) {
+            metricGatewayAtlaspagsDetail.textContent = `${Number(atlaspagsStats.paid || 0)} pagos / ${Number(atlaspagsStats.pix || 0)} PIX`;
         }
         if (metricGatewayClownPayDetail) {
             metricGatewayClownPayDetail.textContent = `${Number(clownpayStats.paid || 0)} pagos / ${Number(clownpayStats.pix || 0)} PIX`;
@@ -7834,6 +7872,7 @@ function initAdmin() {
                 { label: 'Paradise', conv: paradiseConv, paid: Number(paradiseStats.paid || 0), pix: Number(paradiseStats.pix || 0) },
                 { label: 'PinguPag', conv: pingupagConv, paid: Number(pingupagStats.paid || 0), pix: Number(pingupagStats.pix || 0) },
                 { label: 'LumeaPag', conv: lumeapagConv, paid: Number(lumeapagStats.paid || 0), pix: Number(lumeapagStats.pix || 0) },
+                { label: 'AtlasPags', conv: atlaspagsConv, paid: Number(atlaspagsStats.paid || 0), pix: Number(atlaspagsStats.pix || 0) },
                 { label: 'ClownPay', conv: clownpayConv, paid: Number(clownpayStats.paid || 0), pix: Number(clownpayStats.pix || 0) },
                 { label: 'AtomoPay', conv: atomopayConv, paid: Number(atomopayStats.paid || 0), pix: Number(atomopayStats.pix || 0) },
                 { label: 'Bravo Pay', conv: bravoPayConv, paid: Number(bravoPayStats.paid || 0), pix: Number(bravoPayStats.pix || 0) }

@@ -214,6 +214,11 @@
               <em id="metric-gateway-lumeapag-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>AtlasPags</span>
+              <strong id="metric-gateway-atlaspags-conv">0%</strong>
+              <em id="metric-gateway-atlaspags-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -397,6 +402,26 @@
             <div class="input-group">
               <input type="text" id="gateway-lumeapag-description" class="floating-input" placeholder=" " />
               <label for="gateway-lumeapag-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+            </div>
+            <label class="admin-switch">
+              <input type="checkbox" id="gateway-atlaspags-enabled" />
+              <span>AtlasPags ativo</span>
+            </label>
+            <div class="input-group">
+              <input type="text" id="gateway-atlaspags-base-url" class="floating-input" placeholder=" " value="https://atlaspags.com" />
+              <label for="gateway-atlaspags-base-url" class="floating-label">AtlasPags Base URL</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-atlaspags-public-key" class="floating-input" placeholder=" " value="atlas_pk_live_VYdeybn7heQiSaw573dnCbIj" />
+              <label for="gateway-atlaspags-public-key" class="floating-label">AtlasPags Public Key</label>
+            </div>
+            <div class="input-group">
+              <input type="password" id="gateway-atlaspags-api-key" class="floating-input" placeholder=" " value="atlas_sk_live_ER1UyXK0qFjarGNHFBtmoiwHuG6vfSiM" />
+              <label for="gateway-atlaspags-api-key" class="floating-label">AtlasPags Secret Key</label>
+            </div>
+            <div class="input-group">
+              <input type="text" id="gateway-atlaspags-description" class="floating-input" placeholder=" " value="Bag" />
+              <label for="gateway-atlaspags-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
             </div>
             <label class="admin-switch">
               <input type="checkbox" id="gateway-clownpay-enabled" />

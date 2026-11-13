@@ -88,6 +88,14 @@ const {
     isLumeapagRefusedStatus,
     mapLumeapagStatusToUtmify
 } = require('../../lib/lumeapag-provider');
+const {
+    getAtlaspagsStatus,
+    isAtlaspagsPaidStatus,
+    isAtlaspagsRefundedStatus,
+    isAtlaspagsRefusedStatus,
+    mapAtlaspagsStatusToUtmify,
+    verifyAtlasWebhookSignature
+} = require('../../lib/atlaspags-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 
 function deriveSessionIdFromGatewayReference(value = '') {
@@ -609,6 +617,91 @@ function extractGatewayEvent(gateway, body = {}, query = {}) {
         };
     }
 
+    if (gateway === 'atlaspags') {
+        const item = body?.data && typeof body.data === 'object' ? body.data : body;
+        const txid = String(item.id || item.chargeId || item.charge_id || body.id || '').trim();
+        const eventType = String(body.type || '').trim().toLowerCase();
+        let statusRaw = getAtlaspagsStatus(item);
+        if (eventType === 'transaction.paid') statusRaw = 'paid';
+        else if (eventType === 'transaction.expired') statusRaw = 'expired';
+        else if (eventType === 'transaction.failed') statusRaw = 'failed';
+        else if (eventType === 'transaction.refunded') statusRaw = 'refunded';
+        else if (eventType === 'transaction.chargeback') statusRaw = 'chargeback';
+
+        const utmifyStatus = mapAtlaspagsStatusToUtmify(statusRaw);
+        const isPaid = isAtlaspagsPaidStatus(statusRaw);
+        const isRefunded = isAtlaspagsRefundedStatus(statusRaw);
+        const isRefused = isAtlaspagsRefusedStatus(statusRaw);
+        const amount = Number(item.amount || body.amount || 0);
+        const gatewayFee = Number(item.fee || body.fee || 0);
+        const userCommission = Math.max(0, Number((amount - gatewayFee).toFixed(2)));
+        const metadata = asObject(item.metadata || body.metadata);
+        const tracking = asObject(item.tracking || body.tracking);
+        const customer = asObject(item.customer || body.customer);
+        const sessionOrderId = String(
+            metadata?.sessionId ||
+            tracking?.sessionId ||
+            metadata?.orderId ||
+            tracking?.orderId ||
+            item.external_id ||
+            item.externalId ||
+            ''
+        ).trim();
+        const statusChangedAt =
+            normalizeDate(item.paid_at) ||
+            normalizeDate(item.paidAt) ||
+            normalizeDate(body.created_at) ||
+            new Date().toISOString();
+        const pixCreatedAtFromGateway =
+            normalizeDate(item.created_at) ||
+            normalizeDate(body.created_at) ||
+            null;
+        const lastEvent = isPaid ? 'pix_confirmed' : isRefunded ? 'pix_refunded' : isRefused ? 'pix_refused' : 'pix_pending';
+
+        return {
+            gateway,
+            txid,
+            statusRaw,
+            utmifyStatus,
+            isPaid,
+            isRefunded,
+            isRefused,
+            amount,
+            gatewayFee,
+            userCommission,
+            sessionOrderId,
+            statusChangedAt,
+            pixCreatedAtFromGateway,
+            lastEvent,
+            webhookEventId: String(body?.id || body?.eventId || body?.event_id || '').trim(),
+            fallbackIdentity: {
+                cpf: String(customer?.document || customer?.doc || '').trim(),
+                email: String(customer?.email || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            fallbackPersonal: {
+                name: String(customer?.name || '').trim(),
+                email: String(customer?.email || '').trim(),
+                cpf: String(customer?.document || customer?.doc || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            tracking: {
+                orderId: sessionOrderId,
+                sessionId: sessionOrderId,
+                utm_source: String(body?.utm_source || tracking?.utm_source || metadata?.utm_source || '').trim(),
+                utm_medium: String(body?.utm_medium || tracking?.utm_medium || metadata?.utm_medium || '').trim(),
+                utm_campaign: String(body?.utm_campaign || tracking?.utm_campaign || metadata?.utm_campaign || '').trim(),
+                utm_term: String(body?.utm_term || tracking?.utm_term || metadata?.utm_term || '').trim(),
+                utm_content: String(body?.utm_content || tracking?.utm_content || metadata?.utm_content || '').trim(),
+                src: String(body?.src || tracking?.src || metadata?.src || '').trim(),
+                sck: String(body?.sck || tracking?.sck || metadata?.sck || '').trim(),
+                fbclid: String(body?.fbclid || tracking?.fbclid || metadata?.fbclid || '').trim(),
+                gclid: String(body?.gclid || tracking?.gclid || metadata?.gclid || '').trim(),
+                ttclid: String(body?.ttclid || tracking?.ttclid || metadata?.ttclid || '').trim()
+            }
+        };
+    }
+
     if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const txid = getParadiseTxid(body);
         const statusRaw = getParadiseStatus(body);
@@ -961,11 +1054,17 @@ function extractGatewayEvent(gateway, body = {}, query = {}) {
     };
 }
 
+function looksLikeAtlaspagsWebhook(body = {}) {
+    const type = String(body?.type || '').trim().toLowerCase();
+    return type.startsWith('transaction.') || type.startsWith('payout.') || body?.object === 'charge';
+}
+
 function resolveWebhookGateway(query = {}, body = {}, payments = {}) {
     const requestedRaw = String(query.gateway || query.provider || body.gateway || body.provider || '').trim();
     if (requestedRaw) {
         return normalizeActiveGatewayId(requestedRaw, payments.activeGateway);
     }
+    if (looksLikeAtlaspagsWebhook(body)) return 'atlaspags';
     if (looksLikeParadiseWebhook(body)) return 'paradise';
     if (looksLikeSunizeWebhook(body)) return 'sunize';
     if (looksLikeBravoPayWebhook(body)) return 'bravopay';
@@ -1009,6 +1108,13 @@ const pixWebhookHandler = async (req, res) => {
         const signature = String(req.headers?.['x-bravopay-signature'] || '').trim();
         const secret = String(gatewayConfig.webhookSecret || gatewayConfig.webhookToken || '').trim();
         if (!secret || !verifyBravoPayWebhookSignature(rawBody, signature, secret)) {
+            res.status(401).json({ status: 'invalid_signature' });
+            return;
+        }
+    } else if (gateway === 'atlaspags') {
+        const signature = String(req.headers?.['x-atlas-signature'] || '').trim();
+        const secret = String(gatewayConfig.webhookSecret || gatewayConfig.webhookToken || '').trim();
+        if (secret && signature && !verifyAtlasWebhookSignature(rawBody, signature, secret)) {
             res.status(401).json({ status: 'invalid_signature' });
             return;
         }

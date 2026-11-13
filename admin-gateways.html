@@ -153,6 +153,11 @@
               <em id="metric-gateway-lumeapag-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>AtlasPags</span>
+              <strong id="metric-gateway-atlaspags-conv">0%</strong>
+              <em id="metric-gateway-atlaspags-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -268,6 +273,19 @@
                   <span class="gateway-order-state" data-gateway-order-state="lumeapag">-</span>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir LumeaPag"></button>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer LumeaPag"></button>
+                </article>
+                <article class="gateway-order-item" data-gateway-order-item="atlaspags" draggable="true">
+                  <span class="gateway-order-index">6</span>
+                  <span class="gateway-order-handle" aria-hidden="true"></span>
+                  <span class="gateway-order-name">AtlasPags</span>
+                  <span class="gateway-order-stats" data-gateway-order-stats="atlaspags">
+                    <span class="gateway-order-stat"><strong data-gateway-order-generated="atlaspags">0</strong><em>Gerados hoje</em></span>
+                    <span class="gateway-order-stat"><strong data-gateway-order-paid="atlaspags">0</strong><em>Aprovados hoje</em></span>
+                    <span class="gateway-order-stat gateway-order-stat--conversion"><strong data-gateway-order-conversion="atlaspags">0%</strong><em>Conversao hoje</em><i><b data-gateway-order-conversion-bar="atlaspags"></b></i></span>
+                  </span>
+                  <span class="gateway-order-state" data-gateway-order-state="atlaspags">-</span>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir AtlasPags"></button>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer AtlasPags"></button>
                 </article>
                 <article class="gateway-order-item" data-gateway-order-item="atomopay" draggable="true">
                   <span class="gateway-order-index">4</span>
@@ -502,6 +520,42 @@
                 </div>
               </div>
             </article>
+            <article class="gateway-card" data-gateway-card="atlaspags">
+              <header class="gateway-card-header">
+                <div class="gateway-card-heading">
+                  <h3>AtlasPags</h3>
+                  <p>Gateway PIX AtlasPags com webhook nativo e tracking completo.</p>
+                </div>
+                <div class="gateway-card-actions">
+                  <label class="gateway-switch" for="gateway-atlaspags-enabled">
+                    <input type="checkbox" id="gateway-atlaspags-enabled" />
+                    <span class="gateway-switch-track" aria-hidden="true"></span>
+                    <span class="gateway-switch-text" id="gateway-atlaspags-state">Carregando</span>
+                  </label>
+                  <button type="button" class="btn-secondary gateway-config-toggle" data-gateway-config-toggle="atlaspags" aria-controls="gateway-config-atlaspags" aria-expanded="false">Configurar</button>
+                </div>
+              </header>
+              <div id="gateway-config-atlaspags" class="gateway-card-body">
+                <div class="admin-grid gateway-fields-grid">
+                  <div class="input-group">
+                    <input type="text" id="gateway-atlaspags-base-url" class="floating-input" placeholder=" " value="https://atlaspags.com" />
+                    <label for="gateway-atlaspags-base-url" class="floating-label">AtlasPags Base URL</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-atlaspags-public-key" class="floating-input" placeholder=" " value="atlas_pk_live_VYdeybn7heQiSaw573dnCbIj" />
+                    <label for="gateway-atlaspags-public-key" class="floating-label">AtlasPags Public Key</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="password" id="gateway-atlaspags-api-key" class="floating-input" placeholder=" " autocomplete="new-password" value="atlas_sk_live_ER1UyXK0qFjarGNHFBtmoiwHuG6vfSiM" />
+                    <label for="gateway-atlaspags-api-key" class="floating-label">AtlasPags Secret Key</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-atlaspags-description" class="floating-input" placeholder=" " value="Bag" />
+                    <label for="gateway-atlaspags-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+                  </div>
+                </div>
+              </div>
+            </article>
             <article class="gateway-card" data-gateway-card="clownpay">
               <header class="gateway-card-header">
                 <div class="gateway-card-heading">
@@ -700,6 +754,10 @@
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-lumeapag" />
               <span>LumeaPag</span>
+            </label>
+            <label class="gateway-test-option">
+              <input type="checkbox" id="gateway-test-atlaspags" />
+              <span>AtlasPags</span>
             </label>
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-clownpay" />
