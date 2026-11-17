@@ -4443,6 +4443,14 @@ body[data-page='admin'][data-admin='smsmais'] .admin-section--card {
     padding: 5px 9px;
     font-size: 0.76rem;
     font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.gateway-order-state:hover {
+    filter: brightness(0.92);
+    transform: scale(1.04);
 }
 
 .gateway-order-state.is-on {

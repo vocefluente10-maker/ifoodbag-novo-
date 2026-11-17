@@ -4949,6 +4949,7 @@ function initAdmin() {
         if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'lumeapag') return 'lumeapag';
         if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
+        if (normalized === 'flevopay' || normalized === 'flevo' || normalized === 'flevopag') return 'flevopay';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return 'ghostspay';
@@ -4963,6 +4964,7 @@ function initAdmin() {
         if (normalized === 'pingupag') return 'pingupag';
         if (normalized === 'lumeapag') return 'lumeapag';
         if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
+        if (normalized === 'flevopay' || normalized === 'flevo' || normalized === 'flevopag') return 'flevopay';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return '';
@@ -5148,6 +5150,7 @@ function initAdmin() {
             if (stateNode) {
                 stateNode.textContent = enabled ? 'Ligado' : 'Desligado';
                 stateNode.classList.toggle('is-on', enabled);
+                stateNode.title = enabled ? 'Clique para desligar este gateway' : 'Clique para ligar este gateway';
             }
             item.classList.toggle('is-disabled', !enabled);
             if (upButton) upButton.disabled = index === 0;
@@ -5222,6 +5225,19 @@ function initAdmin() {
             syncGatewayOrderMeta();
         });
         paymentsGatewayOrder.addEventListener('click', (event) => {
+            const stateBtn = event.target?.closest?.('[data-gateway-order-state]');
+            if (stateBtn) {
+                const item = stateBtn.closest('[data-gateway-order-item]');
+                if (item) {
+                    const gateway = normalizeGatewayKey(item.getAttribute('data-gateway-order-item'));
+                    const input = getGatewayEnabledInput(gateway);
+                    if (input) {
+                        input.checked = !input.checked;
+                        syncGatewaySwitches();
+                    }
+                }
+                return;
+            }
             const button = event.target?.closest?.('[data-gateway-order-move]');
             if (!button || button.disabled) return;
             const item = button.closest('[data-gateway-order-item]');
