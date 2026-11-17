@@ -96,6 +96,13 @@ const {
     mapAtlaspagsStatusToUtmify,
     verifyAtlasWebhookSignature
 } = require('../../lib/atlaspags-provider');
+const {
+    getFlevopayStatus,
+    isFlevopayPaidStatus,
+    isFlevopayRefundedStatus,
+    isFlevopayRefusedStatus,
+    mapFlevopayStatusToUtmify
+} = require('../../lib/flevopay-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 
 function deriveSessionIdFromGatewayReference(value = '') {
@@ -617,6 +624,90 @@ function extractGatewayEvent(gateway, body = {}, query = {}) {
         };
     }
 
+    if (gateway === 'flevopay') {
+        const item = body?.data && typeof body.data === 'object' ? body.data : body;
+        const txid = String(item.transaction_id || item.id || body.transaction_id || body.id || '').trim();
+        const rawStatus = getFlevopayStatus(item) || String(item.status || item.payment_status || body.status || '').trim();
+        const utmifyStatus = mapFlevopayStatusToUtmify(rawStatus);
+        const isPaid = isFlevopayPaidStatus(rawStatus);
+        const isRefunded = isFlevopayRefundedStatus(rawStatus);
+        const isRefused = isFlevopayRefusedStatus(rawStatus);
+        const amountCents = Number(item.amount || body.amount || 0);
+        const amount = Number((amountCents / 100).toFixed(2));
+        const gatewayFee = Number(item.fee || body.fee || 0);
+        const userCommission = Math.max(0, Number((amount - gatewayFee).toFixed(2)));
+        const metadata = asObject(item.metadata || body.metadata);
+        const tracking = asObject(item.tracking || body.tracking);
+        const customer = asObject(item.customer || body.customer);
+        const sessionOrderId = String(
+            item.external_id ||
+            item.store_reference ||
+            item.reference ||
+            body.external_id ||
+            body.store_reference ||
+            body.reference ||
+            metadata?.sessionId ||
+            tracking?.sessionId ||
+            metadata?.orderId ||
+            tracking?.orderId ||
+            ''
+        ).trim();
+        const statusChangedAt =
+            normalizeDate(item.timestamp) ||
+            normalizeDate(item.paid_at) ||
+            normalizeDate(item.updated_at) ||
+            normalizeDate(body.timestamp) ||
+            new Date().toISOString();
+        const pixCreatedAtFromGateway =
+            normalizeDate(item.created_at) ||
+            normalizeDate(body.created_at) ||
+            null;
+        const lastEvent = isPaid ? 'pix_confirmed' : isRefunded ? 'pix_refunded' : isRefused ? 'pix_refused' : 'pix_pending';
+
+        return {
+            gateway,
+            txid,
+            statusRaw: rawStatus,
+            utmifyStatus,
+            isPaid,
+            isRefunded,
+            isRefused,
+            amount,
+            gatewayFee,
+            userCommission,
+            sessionOrderId,
+            statusChangedAt,
+            pixCreatedAtFromGateway,
+            lastEvent,
+            webhookEventId: String(body?.id || body?.eventId || body?.event_id || '').trim(),
+            fallbackIdentity: {
+                cpf: String(customer?.document || customer?.doc || '').trim(),
+                email: String(customer?.email || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            fallbackPersonal: {
+                name: String(customer?.name || '').trim(),
+                email: String(customer?.email || '').trim(),
+                cpf: String(customer?.document || customer?.doc || '').trim(),
+                phone: String(customer?.phone || '').trim()
+            },
+            tracking: {
+                orderId: sessionOrderId,
+                sessionId: sessionOrderId,
+                utm_source: String(body?.utm_source || tracking?.utm_source || metadata?.utm_source || '').trim(),
+                utm_medium: String(body?.utm_medium || tracking?.utm_medium || metadata?.utm_medium || '').trim(),
+                utm_campaign: String(body?.utm_campaign || tracking?.utm_campaign || metadata?.utm_campaign || '').trim(),
+                utm_term: String(body?.utm_term || tracking?.utm_term || metadata?.utm_term || '').trim(),
+                utm_content: String(body?.utm_content || tracking?.utm_content || metadata?.utm_content || '').trim(),
+                src: String(body?.src || tracking?.src || metadata?.src || '').trim(),
+                sck: String(body?.sck || tracking?.sck || metadata?.sck || '').trim(),
+                fbclid: String(body?.fbclid || tracking?.fbclid || metadata?.fbclid || '').trim(),
+                gclid: String(body?.gclid || tracking?.gclid || metadata?.gclid || '').trim(),
+                ttclid: String(body?.ttclid || tracking?.ttclid || metadata?.ttclid || '').trim()
+            }
+        };
+    }
+
     if (gateway === 'atlaspags') {
         const item = body?.data && typeof body.data === 'object' ? body.data : body;
         const txid = String(item.id || item.chargeId || item.charge_id || body.id || '').trim();
@@ -1059,12 +1150,20 @@ function looksLikeAtlaspagsWebhook(body = {}) {
     return type.startsWith('transaction.') || type.startsWith('payout.') || body?.object === 'charge';
 }
 
+function looksLikeFlevopayWebhook(body = {}) {
+    return Boolean(
+        body?.webhook_type === 'transaction' ||
+        (body?.transaction_id && (body?.store_reference || body?.e2e_id || body?.pix_code))
+    );
+}
+
 function resolveWebhookGateway(query = {}, body = {}, payments = {}) {
     const requestedRaw = String(query.gateway || query.provider || body.gateway || body.provider || '').trim();
     if (requestedRaw) {
         return normalizeActiveGatewayId(requestedRaw, payments.activeGateway);
     }
     if (looksLikeAtlaspagsWebhook(body)) return 'atlaspags';
+    if (looksLikeFlevopayWebhook(body)) return 'flevopay';
     if (looksLikeParadiseWebhook(body)) return 'paradise';
     if (looksLikeSunizeWebhook(body)) return 'sunize';
     if (looksLikeBravoPayWebhook(body)) return 'bravopay';

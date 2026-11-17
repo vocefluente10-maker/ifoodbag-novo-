@@ -68,6 +68,16 @@ const {
     mapAtlaspagsStatusToUtmify,
     ensureValidCPF
 } = require('../../lib/atlaspags-provider');
+const {
+    cleanApiKey: cleanFlevoApiKey,
+    resolvePostbackUrl: resolveFlevopayPostbackUrl,
+    resolveFlevopayCreateResponse,
+    hasFlevopayCredentials,
+    requestCreateTransaction: requestFlevopayCreate,
+    requestTransactionById: requestFlevopayStatus,
+    getFlevopayStatus,
+    mapFlevopayStatusToUtmify
+} = require('../../lib/flevopay-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 const { generateTrackingCode } = require('../../lib/email-sender');
 
@@ -104,6 +114,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
         if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') return hasParadiseCredentials(config);
         if (gateway === 'lumeapag') return hasLumeapagCredentials(config);
         if (gateway === 'atlaspags') return hasAtlaspagsCredentials(config);
+        if (gateway === 'flevopay') return hasFlevopayCredentials(config);
         if (gateway === 'atomopay') return hasAtomopayCredentials(config);
         if (gateway === 'bravopay') return hasBravoPayCredentials(config);
         return false;
@@ -129,7 +140,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
 
     const allDisabled = priority.every((gateway) => !isEnabled(gateway));
     if (allDisabled) {
-        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags'];
+        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'flevopay'];
         const credentialFallbacks = [];
         for (const gateway of operationalFallback) {
             if (hasGatewayCredentials(gateway)) credentialFallbacks.push(gateway);
@@ -916,6 +927,19 @@ async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
         return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
     }
 
+    if (gateway === 'flevopay') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestFlevopayStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveFlevopayCreateResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
     if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         const quickConfig = {
             ...gatewayConfig,
@@ -1650,6 +1674,110 @@ module.exports = async (req, res) => {
                         }
                     }
                 }
+            } else if (gateway === 'flevopay') {
+                if (!hasFlevopayCredentials(gatewayConfig)) {
+                    console.warn('[pix] flevopay missing credentials', {
+                        hasApiKey: Boolean(cleanFlevoApiKey(gatewayConfig.apiKey || gatewayConfig.secretKey)),
+                        baseUrl: String(gatewayConfig.baseUrl || '').trim()
+                    });
+                    rememberGatewayFailure(gateway, 'flevopay_missing_credentials');
+                    continue;
+                }
+
+                const flevoReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${flevoReferenceBase}-${Date.now()}`;
+
+                const rawDoc = String(cpf || '').replace(/\D/g, '');
+                const rawPhone = String(phone || '').replace(/\D/g, '');
+                const flevoAmountCents = Math.max(100, Math.round(Number(totalAmount) * 100));
+                const productName = resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled);
+
+                const flevoPayload = {
+                    amount: flevoAmountCents,
+                    description: productName,
+                    reference: externalId,
+                    postback_url: resolveFlevopayPostbackUrl(req, gatewayConfig),
+                    source: String(gatewayConfig.source || 'api_externa').trim() || 'api_externa',
+                    customer: {
+                        name: name || 'Cliente',
+                        email: email || `cliente_${Date.now()}@email.com`,
+                        document: rawDoc.length === 11 ? rawDoc : (rawDoc || '06253966023'),
+                        phone: rawPhone.length >= 10 ? rawPhone : '11999999999'
+                    },
+                    tracking: {
+                        gateway: 'flevopay',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+
+                if (street) {
+                    flevoPayload.address = {
+                        street,
+                        number: streetNumber,
+                        complement,
+                        neighborhood,
+                        city,
+                        state,
+                        zipcode: zipCode
+                    };
+                }
+
+                if (String(gatewayConfig.productHash || '').trim() && flevoPayload.source !== 'api_externa') {
+                    flevoPayload.productHash = String(gatewayConfig.productHash).trim();
+                }
+
+                if (normalizedBump.selected && String(gatewayConfig.orderbumpHash || '').trim()) {
+                    flevoPayload.orderbump = [String(gatewayConfig.orderbumpHash).trim()];
+                }
+
+                ({ response, data } = await requestFlevopayCreate(gatewayConfig, flevoPayload));
+                if (!response?.ok || data?.status === 'error' || data?.error) {
+                    console.warn('[pix] flevopay create failed', {
+                        status: Number(response?.status || 0),
+                        detail: data?.message || data?.error || '',
+                        reference: externalId
+                    });
+                    rememberGatewayFailure(gateway, 'flevopay_create_failed', response, data);
+                    continue;
+                }
+
+                const flevoData = resolveFlevopayCreateResponse(data);
+                txid = flevoData.txid;
+                paymentCode = flevoData.paymentCode;
+                paymentCodeBase64 = flevoData.paymentCodeBase64;
+                paymentQrUrl = flevoData.paymentQrUrl;
+                statusRaw = flevoData.status;
+                externalId = flevoData.externalId || externalId;
+
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatus = await requestFlevopayStatus({
+                        ...gatewayConfig,
+                        timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig.timeoutMs || 12000), 3500))
+                    }, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveFlevopayCreateResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        if (!statusRaw || statusRaw === 'waiting_payment' || statusRaw === 'pending') {
+                            statusRaw = fromStatus.status;
+                        }
+                    }
+                }
             } else if (gateway === 'atlaspags') {
                 if (!hasAtlaspagsCredentials(gatewayConfig)) {
                     console.warn('[pix] atlaspags missing credentials', {
@@ -1737,6 +1865,110 @@ module.exports = async (req, res) => {
                     }));
                     if (quickStatus?.response?.ok) {
                         const fromStatus = resolveAtlaspagsCreateResponse(quickStatus.data || {});
+                        paymentCode = paymentCode || fromStatus.paymentCode;
+                        paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
+                        paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;
+                        if (!statusRaw || statusRaw === 'waiting_payment' || statusRaw === 'pending') {
+                            statusRaw = fromStatus.status;
+                        }
+                    }
+                }
+            } else if (gateway === 'flevopay') {
+                if (!hasFlevopayCredentials(gatewayConfig)) {
+                    console.warn('[pix] flevopay missing credentials', {
+                        hasApiKey: Boolean(cleanFlevoApiKey(gatewayConfig.apiKey || gatewayConfig.secretKey)),
+                        baseUrl: String(gatewayConfig.baseUrl || '').trim()
+                    });
+                    rememberGatewayFailure(gateway, 'flevopay_missing_credentials');
+                    continue;
+                }
+
+                const flevoReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${flevoReferenceBase}-${Date.now()}`;
+
+                const rawDoc = String(cpf || '').replace(/\D/g, '');
+                const rawPhone = String(phone || '').replace(/\D/g, '');
+                const flevoAmountCents = Math.max(100, Math.round(Number(totalAmount) * 100));
+                const productName = resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled);
+
+                const flevoPayload = {
+                    amount: flevoAmountCents,
+                    description: productName,
+                    reference: externalId,
+                    postback_url: resolveFlevopayPostbackUrl(req, gatewayConfig),
+                    source: String(gatewayConfig.source || 'api_externa').trim() || 'api_externa',
+                    customer: {
+                        name: name || 'Cliente',
+                        email: email || `cliente_${Date.now()}@email.com`,
+                        document: rawDoc.length === 11 ? rawDoc : (rawDoc || '06253966023'),
+                        phone: rawPhone.length >= 10 ? rawPhone : '11999999999'
+                    },
+                    tracking: {
+                        gateway: 'flevopay',
+                        orderId,
+                        sessionId: sessionId || orderId,
+                        utm_source: rawBody?.utm?.utm_source || '',
+                        utm_medium: rawBody?.utm?.utm_medium || '',
+                        utm_campaign: rawBody?.utm?.utm_campaign || '',
+                        utm_content: rawBody?.utm?.utm_content || '',
+                        utm_term: rawBody?.utm?.utm_term || '',
+                        src: rawBody?.utm?.src || '',
+                        sck: rawBody?.utm?.sck || '',
+                        fbclid: rawBody?.utm?.fbclid || rawBody?.fbclid || '',
+                        gclid: rawBody?.utm?.gclid || '',
+                        ttclid: rawBody?.utm?.ttclid || ''
+                    }
+                };
+
+                if (street) {
+                    flevoPayload.address = {
+                        street,
+                        number: streetNumber,
+                        complement,
+                        neighborhood,
+                        city,
+                        state,
+                        zipcode: zipCode
+                    };
+                }
+
+                if (String(gatewayConfig.productHash || '').trim() && flevoPayload.source !== 'api_externa') {
+                    flevoPayload.productHash = String(gatewayConfig.productHash).trim();
+                }
+
+                if (normalizedBump.selected && String(gatewayConfig.orderbumpHash || '').trim()) {
+                    flevoPayload.orderbump = [String(gatewayConfig.orderbumpHash).trim()];
+                }
+
+                ({ response, data } = await requestFlevopayCreate(gatewayConfig, flevoPayload));
+                if (!response?.ok || data?.status === 'error' || data?.error) {
+                    console.warn('[pix] flevopay create failed', {
+                        status: Number(response?.status || 0),
+                        detail: data?.message || data?.error || '',
+                        reference: externalId
+                    });
+                    rememberGatewayFailure(gateway, 'flevopay_create_failed', response, data);
+                    continue;
+                }
+
+                const flevoData = resolveFlevopayCreateResponse(data);
+                txid = flevoData.txid;
+                paymentCode = flevoData.paymentCode;
+                paymentCodeBase64 = flevoData.paymentCodeBase64;
+                paymentQrUrl = flevoData.paymentQrUrl;
+                statusRaw = flevoData.status;
+                externalId = flevoData.externalId || externalId;
+
+                if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
+                    const quickStatus = await requestFlevopayStatus({
+                        ...gatewayConfig,
+                        timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig.timeoutMs || 12000), 3500))
+                    }, txid).catch(() => ({
+                        response: { ok: false },
+                        data: {}
+                    }));
+                    if (quickStatus?.response?.ok) {
+                        const fromStatus = resolveFlevopayCreateResponse(quickStatus.data || {});
                         paymentCode = paymentCode || fromStatus.paymentCode;
                         paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
                         paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;

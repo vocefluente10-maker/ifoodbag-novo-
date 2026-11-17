@@ -158,6 +158,11 @@
               <em id="metric-gateway-atlaspags-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>FlevoPay</span>
+              <strong id="metric-gateway-flevopay-conv">0%</strong>
+              <em id="metric-gateway-flevopay-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -556,6 +561,54 @@
                 </div>
               </div>
             </article>
+            <article class="gateway-card" data-gateway-card="flevopay">
+              <header class="gateway-card-header">
+                <div class="gateway-card-heading">
+                  <h3>FlevoPay</h3>
+                  <p>Gateway PIX FlevoPay com webhook nativo e tracking completo.</p>
+                </div>
+                <div class="gateway-card-actions">
+                  <label class="gateway-switch" for="gateway-flevopay-enabled">
+                    <input type="checkbox" id="gateway-flevopay-enabled" />
+                    <span class="gateway-switch-track" aria-hidden="true"></span>
+                    <span class="gateway-switch-text" id="gateway-flevopay-state">Carregando</span>
+                  </label>
+                  <button type="button" class="btn-secondary gateway-config-toggle" data-gateway-config-toggle="flevopay" aria-controls="gateway-config-flevopay" aria-expanded="false">Configurar</button>
+                </div>
+              </header>
+              <div id="gateway-config-flevopay" class="gateway-card-body">
+                <div class="admin-grid gateway-fields-grid">
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-base-url" class="floating-input" placeholder=" " value="https://app.flevopag.com" />
+                    <label for="gateway-flevopay-base-url" class="floating-label">FlevoPay Base URL</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-account-id" class="floating-input" placeholder=" " value="12648" />
+                    <label for="gateway-flevopay-account-id" class="floating-label">ID da Conta</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="password" id="gateway-flevopay-api-key" class="floating-input" placeholder=" " autocomplete="new-password" value="flevopay_sk_14ab4a01b136073ab1e0e3a9e5d424c6dcc4627d98ae0a4552ef110f8be39d67" />
+                    <label for="gateway-flevopay-api-key" class="floating-label">FlevoPay Secret Key</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-product-hash" class="floating-input" placeholder=" " />
+                    <label for="gateway-flevopay-product-hash" class="floating-label">Product Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-orderbump-hash" class="floating-input" placeholder=" " />
+                    <label for="gateway-flevopay-orderbump-hash" class="floating-label">Orderbump Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-source" class="floating-input" placeholder=" " value="api_externa" />
+                    <label for="gateway-flevopay-source" class="floating-label">Origem (Source, padrao api_externa)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-flevopay-description" class="floating-input" placeholder=" " value="Bag" />
+                    <label for="gateway-flevopay-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+                  </div>
+                </div>
+              </div>
+            </article>
             <article class="gateway-card" data-gateway-card="clownpay">
               <header class="gateway-card-header">
                 <div class="gateway-card-heading">
@@ -758,6 +811,10 @@
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-atlaspags" />
               <span>AtlasPags</span>
+            </label>
+            <label class="gateway-test-option">
+              <input type="checkbox" id="gateway-test-flevopay" />
+              <span>FlevoPay</span>
             </label>
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-clownpay" />
