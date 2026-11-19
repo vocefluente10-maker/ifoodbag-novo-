@@ -4365,6 +4365,7 @@ function initAdmin() {
     const gatewayLumeapagEnabled = document.getElementById('gateway-lumeapag-enabled');
     const gatewayAtlaspagsEnabled = document.getElementById('gateway-atlaspags-enabled');
     const gatewayFlevopayEnabled = document.getElementById('gateway-flevopay-enabled');
+    const gatewayElevypayEnabled = document.getElementById('gateway-elevypay-enabled');
     const gatewayParadiseBaseUrl = document.getElementById('gateway-paradise-base-url');
     const gatewayClownPayBaseUrl = document.getElementById('gateway-clownpay-base-url');
     const gatewayPingupagBaseUrl = document.getElementById('gateway-pingupag-base-url');
@@ -4373,6 +4374,8 @@ function initAdmin() {
     const gatewayAtlaspagsPublicKey = document.getElementById('gateway-atlaspags-public-key');
     const gatewayFlevopayBaseUrl = document.getElementById('gateway-flevopay-base-url');
     const gatewayFlevopayAccountId = document.getElementById('gateway-flevopay-account-id');
+    const gatewayElevypayBaseUrl = document.getElementById('gateway-elevypay-base-url');
+    const gatewayElevypayAccountId = document.getElementById('gateway-elevypay-account-id');
     const gatewayParadiseApiKey = document.getElementById('gateway-paradise-api-key');
     const gatewayClownPaySubaccountApiKey = document.getElementById('gateway-clownpay-subaccount-api-key');
     const gatewayClownPayApiKey = document.getElementById('gateway-clownpay-api-key');
@@ -4380,27 +4383,32 @@ function initAdmin() {
     const gatewayLumeapagApiKey = document.getElementById('gateway-lumeapag-api-key');
     const gatewayAtlaspagsApiKey = document.getElementById('gateway-atlaspags-api-key');
     const gatewayFlevopayApiKey = document.getElementById('gateway-flevopay-api-key');
+    const gatewayElevypayApiKey = document.getElementById('gateway-elevypay-api-key');
     const gatewayParadiseProductHash = document.getElementById('gateway-paradise-product-hash');
     const gatewayClownPayProductHash = document.getElementById('gateway-clownpay-product-hash');
     const gatewayPingupagProductHash = document.getElementById('gateway-pingupag-product-hash');
     const gatewayLumeapagProductHash = document.getElementById('gateway-lumeapag-product-hash');
     const gatewayFlevopayProductHash = document.getElementById('gateway-flevopay-product-hash');
+    const gatewayElevypayProductHash = document.getElementById('gateway-elevypay-product-hash');
     const gatewayParadiseOrderbumpHash = document.getElementById('gateway-paradise-orderbump-hash');
     const gatewayClownPayOrderbumpHash = document.getElementById('gateway-clownpay-orderbump-hash');
     const gatewayPingupagOrderbumpHash = document.getElementById('gateway-pingupag-orderbump-hash');
     const gatewayLumeapagOrderbumpHash = document.getElementById('gateway-lumeapag-orderbump-hash');
     const gatewayFlevopayOrderbumpHash = document.getElementById('gateway-flevopay-orderbump-hash');
+    const gatewayElevypayOrderbumpHash = document.getElementById('gateway-elevypay-orderbump-hash');
     const gatewayParadiseSource = document.getElementById('gateway-paradise-source');
     const gatewayClownPaySource = document.getElementById('gateway-clownpay-source');
     const gatewayPingupagSource = document.getElementById('gateway-pingupag-source');
     const gatewayLumeapagSource = document.getElementById('gateway-lumeapag-source');
     const gatewayFlevopaySource = document.getElementById('gateway-flevopay-source');
+    const gatewayElevypaySource = document.getElementById('gateway-elevypay-source');
     const gatewayParadiseDescription = document.getElementById('gateway-paradise-description');
     const gatewayClownPayDescription = document.getElementById('gateway-clownpay-description');
     const gatewayPingupagDescription = document.getElementById('gateway-pingupag-description');
     const gatewayLumeapagDescription = document.getElementById('gateway-lumeapag-description');
     const gatewayAtlaspagsDescription = document.getElementById('gateway-atlaspags-description');
     const gatewayFlevopayDescription = document.getElementById('gateway-flevopay-description');
+    const gatewayElevypayDescription = document.getElementById('gateway-elevypay-description');
     const gatewayAtomopayEnabled = document.getElementById('gateway-atomopay-enabled');
     const gatewayAtomopayBaseUrl = document.getElementById('gateway-atomopay-base-url');
     const gatewayAtomopayApiToken = document.getElementById('gateway-atomopay-api-token');
@@ -4427,6 +4435,7 @@ function initAdmin() {
     const gatewayLumeapagState = document.getElementById('gateway-lumeapag-state');
     const gatewayAtlaspagsState = document.getElementById('gateway-atlaspags-state');
     const gatewayFlevopayState = document.getElementById('gateway-flevopay-state');
+    const gatewayElevypayState = document.getElementById('gateway-elevypay-state');
     const gatewayAtomopayState = document.getElementById('gateway-atomopay-state');
     const gatewayBravoPayState = document.getElementById('gateway-bravopay-state');
     const gatewayCards = Array.from(document.querySelectorAll('[data-gateway-card]'));
@@ -4443,6 +4452,7 @@ function initAdmin() {
     const gatewayTestLumeapag = document.getElementById('gateway-test-lumeapag');
     const gatewayTestAtlaspags = document.getElementById('gateway-test-atlaspags');
     const gatewayTestFlevopay = document.getElementById('gateway-test-flevopay');
+    const gatewayTestElevypay = document.getElementById('gateway-test-elevypay');
     const gatewayTestAtomopay = document.getElementById('gateway-test-atomopay');
     const gatewayTestBravoPay = document.getElementById('gateway-test-bravopay');
     const gatewayTestGenerate = document.getElementById('gateway-test-generate');
@@ -4562,6 +4572,8 @@ function initAdmin() {
     const metricGatewayAtlaspagsDetail = document.getElementById('metric-gateway-atlaspags-detail');
     const metricGatewayFlevopayConv = document.getElementById('metric-gateway-flevopay-conv');
     const metricGatewayFlevopayDetail = document.getElementById('metric-gateway-flevopay-detail');
+    const metricGatewayElevypayConv = document.getElementById('metric-gateway-elevypay-conv');
+    const metricGatewayElevypayDetail = document.getElementById('metric-gateway-elevypay-detail');
     const metricGatewayAtomopayConv = document.getElementById('metric-gateway-atomopay-conv');
     const metricGatewayAtomopayDetail = document.getElementById('metric-gateway-atomopay-detail');
     const metricGatewayBravoPayConv = document.getElementById('metric-gateway-bravopay-conv');
@@ -4669,6 +4681,7 @@ function initAdmin() {
         lumeapag: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         atlaspags: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         flevopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
+        elevypay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         atomopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 },
         bravopay: { leads: 0, pix: 0, paid: 0, refunded: 0, refused: 0, pending: 0, conversion: 0 }
     });
@@ -4950,6 +4963,7 @@ function initAdmin() {
         if (normalized === 'lumeapag') return 'lumeapag';
         if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
         if (normalized === 'flevopay' || normalized === 'flevo' || normalized === 'flevopag') return 'flevopay';
+        if (normalized === 'elevypay' || normalized === 'elevy' || normalized === 'elevypag') return 'elevypay';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return 'ghostspay';
@@ -4965,6 +4979,7 @@ function initAdmin() {
         if (normalized === 'lumeapag') return 'lumeapag';
         if (normalized === 'atlaspags' || normalized === 'atlas' || normalized === 'atlaspag') return 'atlaspags';
         if (normalized === 'flevopay' || normalized === 'flevo' || normalized === 'flevopag') return 'flevopay';
+        if (normalized === 'elevypay' || normalized === 'elevy' || normalized === 'elevypag') return 'elevypay';
         if (normalized === 'atomopay') return 'atomopay';
         if (normalized === 'bravopay') return 'bravopay';
         return '';
@@ -4980,12 +4995,13 @@ function initAdmin() {
         if (normalized === 'lumeapag') return 'LumeaPag';
         if (normalized === 'atlaspags') return 'AtlasPags';
         if (normalized === 'flevopay') return 'FlevoPay';
+        if (normalized === 'elevypay') return 'ElevyPay';
         if (normalized === 'atomopay') return 'AtomoPay';
         if (normalized === 'bravopay') return 'Bravo Pay';
         return 'GhostsPay';
     };
 
-    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'flevopay', 'atomopay', 'bravopay'];
+    const gatewayOrderKeys = ['ghostspay', 'sunize', 'paradise', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'flevopay', 'elevypay', 'atomopay', 'bravopay'];
 
     const normalizeGatewayOrderForUi = (value, fallback = 'ghostspay') => {
         const rawList = Array.isArray(value)
@@ -5029,6 +5045,7 @@ function initAdmin() {
         if (normalized === 'lumeapag') return gatewayLumeapagEnabled;
         if (normalized === 'atlaspags') return gatewayAtlaspagsEnabled;
         if (normalized === 'flevopay') return gatewayFlevopayEnabled;
+        if (normalized === 'elevypay') return gatewayElevypayEnabled;
         if (normalized === 'atomopay') return gatewayAtomopayEnabled;
         if (normalized === 'bravopay') return gatewayBravoPayEnabled;
         return null;
@@ -5065,6 +5082,7 @@ function initAdmin() {
             lumeapag: { ...base.lumeapag, ...(source.lumeapag || {}) },
             atlaspags: { ...base.atlaspags, ...(source.atlaspags || {}) },
             flevopay: { ...base.flevopay, ...(source.flevopay || {}) },
+            elevypay: { ...base.elevypay, ...(source.elevypay || {}) },
             atomopay: { ...base.atomopay, ...(source.atomopay || {}) },
             bravopay: { ...base.bravopay, ...(source.bravopay || {}) }
         };
@@ -5285,6 +5303,7 @@ function initAdmin() {
         syncGatewaySwitchState(gatewayLumeapagEnabled, gatewayLumeapagState);
         syncGatewaySwitchState(gatewayAtlaspagsEnabled, gatewayAtlaspagsState);
         syncGatewaySwitchState(gatewayFlevopayEnabled, gatewayFlevopayState);
+        syncGatewaySwitchState(gatewayElevypayEnabled, gatewayElevypayState);
         syncGatewaySwitchState(gatewayAtomopayEnabled, gatewayAtomopayState);
         syncGatewaySwitchState(gatewayBravoPayEnabled, gatewayBravoPayState);
         syncGatewayOrderStates();
@@ -5512,6 +5531,7 @@ function initAdmin() {
             const lumeapag = gateways.lumeapag || {};
             const atlaspags = gateways.atlaspags || {};
             const flevopay = gateways.flevopay || {};
+            const elevypay = gateways.elevypay || {};
             const atomopay = gateways.atomopay || {};
             const bravopay = gateways.bravopay || {};
             const gatewayOrder = normalizeGatewayOrderForUi(payments.gatewayOrder || [], payments.activeGateway || 'ghostspay');
@@ -5569,6 +5589,14 @@ function initAdmin() {
             if (gatewayFlevopayOrderbumpHash) gatewayFlevopayOrderbumpHash.value = flevopay.orderbumpHash || '';
             if (gatewayFlevopaySource) gatewayFlevopaySource.value = flevopay.source || '';
             if (gatewayFlevopayDescription) gatewayFlevopayDescription.value = flevopay.description || '';
+            if (gatewayElevypayEnabled) gatewayElevypayEnabled.checked = !!elevypay.enabled;
+            if (gatewayElevypayBaseUrl) gatewayElevypayBaseUrl.value = elevypay.baseUrl || '';
+            if (gatewayElevypayAccountId) gatewayElevypayAccountId.value = elevypay.accountId || '';
+            if (gatewayElevypayApiKey) gatewayElevypayApiKey.value = elevypay.apiKey || elevypay.secretKey || '';
+            if (gatewayElevypayProductHash) gatewayElevypayProductHash.value = elevypay.productHash || '';
+            if (gatewayElevypayOrderbumpHash) gatewayElevypayOrderbumpHash.value = elevypay.orderbumpHash || '';
+            if (gatewayElevypaySource) gatewayElevypaySource.value = elevypay.source || '';
+            if (gatewayElevypayDescription) gatewayElevypayDescription.value = elevypay.description || '';
             if (gatewayAtomopayEnabled) gatewayAtomopayEnabled.checked = !!atomopay.enabled;
             if (gatewayAtomopayBaseUrl) gatewayAtomopayBaseUrl.value = atomopay.baseUrl || '';
             if (gatewayAtomopayApiToken) gatewayAtomopayApiToken.value = atomopay.apiToken || '';
@@ -5796,6 +5824,7 @@ function initAdmin() {
         if (gatewayTestLumeapag) gatewayTestLumeapag.checked = gatewayLumeapagEnabled?.checked === true;
         if (gatewayTestAtlaspags) gatewayTestAtlaspags.checked = gatewayAtlaspagsEnabled?.checked === true;
         if (gatewayTestFlevopay) gatewayTestFlevopay.checked = gatewayFlevopayEnabled?.checked === true;
+        if (gatewayTestElevypay) gatewayTestElevypay.checked = gatewayElevypayEnabled?.checked === true;
         if (gatewayTestAtomopay) gatewayTestAtomopay.checked = gatewayAtomopayEnabled?.checked === true;
         if (gatewayTestBravoPay) gatewayTestBravoPay.checked = gatewayBravoPayEnabled?.checked === true;
         if (gatewayTestAmount && !String(gatewayTestAmount.value || '').trim()) {
@@ -5813,6 +5842,7 @@ function initAdmin() {
         if (gatewayTestLumeapag?.checked) gateways.push('lumeapag');
         if (gatewayTestAtlaspags?.checked) gateways.push('atlaspags');
         if (gatewayTestFlevopay?.checked) gateways.push('flevopay');
+        if (gatewayTestElevypay?.checked) gateways.push('elevypay');
         if (gatewayTestAtomopay?.checked) gateways.push('atomopay');
         if (gatewayTestBravoPay?.checked) gateways.push('bravopay');
         return gateways;
@@ -6696,6 +6726,7 @@ function initAdmin() {
             const currentLumeapag = getCurrentGatewaySettings('lumeapag');
             const currentAtlaspags = getCurrentGatewaySettings('atlaspags');
             const currentFlevopay = getCurrentGatewaySettings('flevopay');
+            const currentElevypay = getCurrentGatewaySettings('elevypay');
             const currentAtomopay = getCurrentGatewaySettings('atomopay');
             const currentBravoPay = getCurrentGatewaySettings('bravopay');
             payload.payments = {
@@ -6780,6 +6811,18 @@ function initAdmin() {
                         orderbumpHash: readInputSetting(gatewayFlevopayOrderbumpHash, currentFlevopay.orderbumpHash),
                         source: readInputSetting(gatewayFlevopaySource, currentFlevopay.source),
                         description: readInputSetting(gatewayFlevopayDescription, currentFlevopay.description)
+                    },
+                    elevypay: {
+                        ...(currentSettings?.payments?.gateways?.elevypay || {}),
+                        enabled: readCheckboxSetting(gatewayElevypayEnabled, currentElevypay.enabled),
+                        baseUrl: readInputSetting(gatewayElevypayBaseUrl, currentElevypay.baseUrl),
+                        accountId: readInputSetting(gatewayElevypayAccountId, currentElevypay.accountId),
+                        apiKey: readInputSetting(gatewayElevypayApiKey, currentElevypay.apiKey || currentElevypay.secretKey),
+                        secretKey: readInputSetting(gatewayElevypayApiKey, currentElevypay.secretKey || currentElevypay.apiKey),
+                        productHash: readInputSetting(gatewayElevypayProductHash, currentElevypay.productHash),
+                        orderbumpHash: readInputSetting(gatewayElevypayOrderbumpHash, currentElevypay.orderbumpHash),
+                        source: readInputSetting(gatewayElevypaySource, currentElevypay.source),
+                        description: readInputSetting(gatewayElevypayDescription, currentElevypay.description)
                     },
                     atomopay: {
                         ...(currentSettings?.payments?.gateways?.atomopay || {}),
@@ -7876,6 +7919,7 @@ function initAdmin() {
         const lumeapagStats = metrics.gatewayStats.lumeapag || { pix: 0, paid: 0 };
         const atlaspagsStats = metrics.gatewayStats.atlaspags || { pix: 0, paid: 0 };
         const flevopayStats = metrics.gatewayStats.flevopay || { pix: 0, paid: 0 };
+        const elevypayStats = metrics.gatewayStats.elevypay || { pix: 0, paid: 0 };
         const atomopayStats = metrics.gatewayStats.atomopay || { pix: 0, paid: 0 };
         const bravoPayStats = metrics.gatewayStats.bravopay || { pix: 0, paid: 0 };
         const ghostConv = ghostStats.pix ? Math.round((Number(ghostStats.paid || 0) / Number(ghostStats.pix || 0)) * 100) : 0;
@@ -7886,6 +7930,7 @@ function initAdmin() {
         const lumeapagConv = lumeapagStats.pix ? Math.round((Number(lumeapagStats.paid || 0) / Number(lumeapagStats.pix || 0)) * 100) : 0;
         const atlaspagsConv = atlaspagsStats.pix ? Math.round((Number(atlaspagsStats.paid || 0) / Number(atlaspagsStats.pix || 0)) * 100) : 0;
         const flevopayConv = flevopayStats.pix ? Math.round((Number(flevopayStats.paid || 0) / Number(flevopayStats.pix || 0)) * 100) : 0;
+        const elevypayConv = elevypayStats.pix ? Math.round((Number(elevypayStats.paid || 0) / Number(elevypayStats.pix || 0)) * 100) : 0;
         const atomopayConv = atomopayStats.pix ? Math.round((Number(atomopayStats.paid || 0) / Number(atomopayStats.pix || 0)) * 100) : 0;
         const bravoPayConv = bravoPayStats.pix ? Math.round((Number(bravoPayStats.paid || 0) / Number(bravoPayStats.pix || 0)) * 100) : 0;
 
@@ -7902,6 +7947,7 @@ function initAdmin() {
         if (metricGatewayLumeapagConv) metricGatewayLumeapagConv.textContent = `${lumeapagConv}%`;
         if (metricGatewayAtlaspagsConv) metricGatewayAtlaspagsConv.textContent = `${atlaspagsConv}%`;
         if (metricGatewayFlevopayConv) metricGatewayFlevopayConv.textContent = `${flevopayConv}%`;
+        if (metricGatewayElevypayConv) metricGatewayElevypayConv.textContent = `${elevypayConv}%`;
         if (metricGatewayClownPayConv) metricGatewayClownPayConv.textContent = `${clownpayConv}%`;
         if (metricGatewayParadiseDetail) {
             metricGatewayParadiseDetail.textContent = `${Number(paradiseStats.paid || 0)} pagos / ${Number(paradiseStats.pix || 0)} PIX`;
@@ -7917,6 +7963,9 @@ function initAdmin() {
         }
         if (metricGatewayFlevopayDetail) {
             metricGatewayFlevopayDetail.textContent = `${Number(flevopayStats.paid || 0)} pagos / ${Number(flevopayStats.pix || 0)} PIX`;
+        }
+        if (metricGatewayElevypayDetail) {
+            metricGatewayElevypayDetail.textContent = `${Number(elevypayStats.paid || 0)} pagos / ${Number(elevypayStats.pix || 0)} PIX`;
         }
         if (metricGatewayClownPayDetail) {
             metricGatewayClownPayDetail.textContent = `${Number(clownpayStats.paid || 0)} pagos / ${Number(clownpayStats.pix || 0)} PIX`;
@@ -7939,6 +7988,7 @@ function initAdmin() {
                 { label: 'LumeaPag', conv: lumeapagConv, paid: Number(lumeapagStats.paid || 0), pix: Number(lumeapagStats.pix || 0) },
                 { label: 'AtlasPags', conv: atlaspagsConv, paid: Number(atlaspagsStats.paid || 0), pix: Number(atlaspagsStats.pix || 0) },
                 { label: 'FlevoPay', conv: flevopayConv, paid: Number(flevopayStats.paid || 0), pix: Number(flevopayStats.pix || 0) },
+                { label: 'ElevyPay', conv: elevypayConv, paid: Number(elevypayStats.paid || 0), pix: Number(elevypayStats.pix || 0) },
                 { label: 'ClownPay', conv: clownpayConv, paid: Number(clownpayStats.paid || 0), pix: Number(clownpayStats.pix || 0) },
                 { label: 'AtomoPay', conv: atomopayConv, paid: Number(atomopayStats.paid || 0), pix: Number(atomopayStats.pix || 0) },
                 { label: 'Bravo Pay', conv: bravoPayConv, paid: Number(bravoPayStats.paid || 0), pix: Number(bravoPayStats.pix || 0) }
@@ -9334,6 +9384,7 @@ function initAdmin() {
     gatewayLumeapagEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayAtlaspagsEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayFlevopayEnabled?.addEventListener('change', syncGatewaySwitches);
+    gatewayElevypayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayClownPayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayAtomopayEnabled?.addEventListener('change', syncGatewaySwitches);
     gatewayBravoPayEnabled?.addEventListener('change', syncGatewaySwitches);

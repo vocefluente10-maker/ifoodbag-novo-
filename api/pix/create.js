@@ -78,6 +78,16 @@ const {
     getFlevopayStatus,
     mapFlevopayStatusToUtmify
 } = require('../../lib/flevopay-provider');
+const {
+    cleanApiKey: cleanElevyApiKey,
+    resolvePostbackUrl: resolveElevypayPostbackUrl,
+    resolveElevypayCreateResponse,
+    hasElevypayCredentials,
+    requestCreateTransaction: requestElevypayCreate,
+    requestTransactionById: requestElevypayStatus,
+    getElevypayStatus,
+    mapElevypayStatusToUtmify
+} = require('../../lib/elevypay-provider');
 const { mergePaymentHistory } = require('../../lib/lead-payment-history');
 const { generateTrackingCode } = require('../../lib/email-sender');
 
@@ -115,6 +125,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
         if (gateway === 'lumeapag') return hasLumeapagCredentials(config);
         if (gateway === 'atlaspags') return hasAtlaspagsCredentials(config);
         if (gateway === 'flevopay') return hasFlevopayCredentials(config);
+        if (gateway === 'elevypay') return hasElevypayCredentials(config);
         if (gateway === 'atomopay') return hasAtomopayCredentials(config);
         if (gateway === 'bravopay') return hasBravoPayCredentials(config);
         return false;
@@ -140,7 +151,7 @@ function resolveGatewayCandidates(rawBody = {}, payments = {}) {
 
     const allDisabled = priority.every((gateway) => !isEnabled(gateway));
     if (allDisabled) {
-        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'flevopay'];
+        const operationalFallback = ['ghostspay', 'sunize', 'paradise', 'atomopay', 'bravopay', 'clownpay', 'pingupag', 'lumeapag', 'atlaspags', 'flevopay', 'elevypay'];
         const credentialFallbacks = [];
         for (const gateway of operationalFallback) {
             if (hasGatewayCredentials(gateway)) credentialFallbacks.push(gateway);
@@ -937,6 +948,19 @@ async function hydratePixVisualByGateway(gateway, gatewayConfig, txid) {
             data: {}
         }));
         if (response?.ok) return resolveFlevopayCreateResponse(data || {});
+        return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
+    }
+
+    if (gateway === 'elevypay') {
+        const quickConfig = {
+            ...gatewayConfig,
+            timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig?.timeoutMs || 12000), 3500))
+        };
+        const { response, data } = await requestElevypayStatus(quickConfig, txid).catch(() => ({
+            response: { ok: false },
+            data: {}
+        }));
+        if (response?.ok) return resolveElevypayCreateResponse(data || {});
         return { paymentCode: '', paymentCodeBase64: '', paymentQrUrl: '', status: '', externalId: '' };
     }
 
@@ -1873,29 +1897,29 @@ module.exports = async (req, res) => {
                         }
                     }
                 }
-            } else if (gateway === 'flevopay') {
-                if (!hasFlevopayCredentials(gatewayConfig)) {
-                    console.warn('[pix] flevopay missing credentials', {
-                        hasApiKey: Boolean(cleanFlevoApiKey(gatewayConfig.apiKey || gatewayConfig.secretKey)),
+            } else if (gateway === 'elevypay') {
+                if (!hasElevypayCredentials(gatewayConfig)) {
+                    console.warn('[pix] elevypay missing credentials', {
+                        hasApiKey: Boolean(cleanElevyApiKey(gatewayConfig.apiKey || gatewayConfig.secretKey)),
                         baseUrl: String(gatewayConfig.baseUrl || '').trim()
                     });
-                    rememberGatewayFailure(gateway, 'flevopay_missing_credentials');
+                    rememberGatewayFailure(gateway, 'elevypay_missing_credentials');
                     continue;
                 }
 
-                const flevoReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
-                externalId = `${flevoReferenceBase}-${Date.now()}`;
+                const elevyReferenceBase = upsellEnabled ? `${orderId}-upsell` : orderId;
+                externalId = `${elevyReferenceBase}-${Date.now()}`;
 
                 const rawDoc = String(cpf || '').replace(/\D/g, '');
                 const rawPhone = String(phone || '').replace(/\D/g, '');
-                const flevoAmountCents = Math.max(100, Math.round(Number(totalAmount) * 100));
+                const elevyAmountCents = Math.max(100, Math.round(Number(totalAmount) * 100));
                 const productName = resolveSafeGatewayProductName(gatewayConfig.description, upsellEnabled);
 
-                const flevoPayload = {
-                    amount: flevoAmountCents,
+                const elevyPayload = {
+                    amount: elevyAmountCents,
                     description: productName,
                     reference: externalId,
-                    postback_url: resolveFlevopayPostbackUrl(req, gatewayConfig),
+                    postback_url: resolveElevypayPostbackUrl(req, gatewayConfig),
                     source: String(gatewayConfig.source || 'api_externa').trim() || 'api_externa',
                     customer: {
                         name: name || 'Cliente',
@@ -1904,7 +1928,7 @@ module.exports = async (req, res) => {
                         phone: rawPhone.length >= 10 ? rawPhone : '11999999999'
                     },
                     tracking: {
-                        gateway: 'flevopay',
+                        gateway: 'elevypay',
                         orderId,
                         sessionId: sessionId || orderId,
                         utm_source: rawBody?.utm?.utm_source || '',
@@ -1921,7 +1945,7 @@ module.exports = async (req, res) => {
                 };
 
                 if (street) {
-                    flevoPayload.address = {
+                    elevyPayload.address = {
                         street,
                         number: streetNumber,
                         complement,
@@ -1932,35 +1956,35 @@ module.exports = async (req, res) => {
                     };
                 }
 
-                if (String(gatewayConfig.productHash || '').trim() && flevoPayload.source !== 'api_externa') {
-                    flevoPayload.productHash = String(gatewayConfig.productHash).trim();
+                if (String(gatewayConfig.productHash || '').trim() && elevyPayload.source !== 'api_externa') {
+                    elevyPayload.productHash = String(gatewayConfig.productHash).trim();
                 }
 
                 if (normalizedBump.selected && String(gatewayConfig.orderbumpHash || '').trim()) {
-                    flevoPayload.orderbump = [String(gatewayConfig.orderbumpHash).trim()];
+                    elevyPayload.orderbump = [String(gatewayConfig.orderbumpHash).trim()];
                 }
 
-                ({ response, data } = await requestFlevopayCreate(gatewayConfig, flevoPayload));
+                ({ response, data } = await requestElevypayCreate(gatewayConfig, elevyPayload));
                 if (!response?.ok || data?.status === 'error' || data?.error) {
-                    console.warn('[pix] flevopay create failed', {
+                    console.warn('[pix] elevypay create failed', {
                         status: Number(response?.status || 0),
                         detail: data?.message || data?.error || '',
                         reference: externalId
                     });
-                    rememberGatewayFailure(gateway, 'flevopay_create_failed', response, data);
+                    rememberGatewayFailure(gateway, 'elevypay_create_failed', response, data);
                     continue;
                 }
 
-                const flevoData = resolveFlevopayCreateResponse(data);
-                txid = flevoData.txid;
-                paymentCode = flevoData.paymentCode;
-                paymentCodeBase64 = flevoData.paymentCodeBase64;
-                paymentQrUrl = flevoData.paymentQrUrl;
-                statusRaw = flevoData.status;
-                externalId = flevoData.externalId || externalId;
+                const elevyData = resolveElevypayCreateResponse(data);
+                txid = elevyData.txid;
+                paymentCode = elevyData.paymentCode;
+                paymentCodeBase64 = elevyData.paymentCodeBase64;
+                paymentQrUrl = elevyData.paymentQrUrl;
+                statusRaw = elevyData.status;
+                externalId = elevyData.externalId || externalId;
 
                 if (txid && !paymentCode && !paymentCodeBase64 && !paymentQrUrl) {
-                    const quickStatus = await requestFlevopayStatus({
+                    const quickStatus = await requestElevypayStatus({
                         ...gatewayConfig,
                         timeoutMs: Math.max(1200, Math.min(Number(gatewayConfig.timeoutMs || 12000), 3500))
                     }, txid).catch(() => ({
@@ -1968,7 +1992,7 @@ module.exports = async (req, res) => {
                         data: {}
                     }));
                     if (quickStatus?.response?.ok) {
-                        const fromStatus = resolveFlevopayCreateResponse(quickStatus.data || {});
+                        const fromStatus = resolveElevypayCreateResponse(quickStatus.data || {});
                         paymentCode = paymentCode || fromStatus.paymentCode;
                         paymentCodeBase64 = paymentCodeBase64 || fromStatus.paymentCodeBase64;
                         paymentQrUrl = paymentQrUrl || fromStatus.paymentQrUrl;

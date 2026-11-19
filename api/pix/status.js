@@ -90,6 +90,15 @@ const {
     requestTransactionById: requestFlevopayStatus
 } = require('../../lib/flevopay-provider');
 const {
+    getElevypayStatus,
+    isElevypayPaidStatus,
+    isElevypayRefundedStatus,
+    isElevypayRefusedStatus,
+    mapElevypayStatusToUtmify,
+    resolveElevypayCreateResponse,
+    requestTransactionById: requestElevypayStatus
+} = require('../../lib/elevypay-provider');
+const {
     getLeadByPixTxid,
     getLeadBySessionId,
     updateLeadByPixTxid,
@@ -427,6 +436,9 @@ function mapGatewayStatusToFrontend(gateway, statusRaw) {
     }
     if (gateway === 'flevopay') {
         return mapUtmifyStatusToFrontend(mapFlevopayStatusToUtmify(statusRaw));
+    }
+    if (gateway === 'elevypay') {
+        return mapUtmifyStatusToFrontend(mapElevypayStatusToUtmify(statusRaw));
     }
     if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         return mapUtmifyStatusToFrontend(mapParadiseStatusToUtmify(statusRaw));
@@ -787,7 +799,7 @@ async function enqueuePaidSideEffectsFromLead({
 function resolveStatusGateway(body = {}, leadData = null, payments = {}) {
     const payload = asObject(leadData?.payload);
     const fromLead = resolveGatewayFromPayload(payload, '');
-    if (fromLead === 'ghostspay' || fromLead === 'sunize' || (fromLead === 'paradise' || fromLead === 'clownpay' || fromLead === 'pingupag' || fromLead === 'lumeapag' || fromLead === 'atlaspags' || fromLead === 'flevopay') || fromLead === 'atomopay') {
+    if (fromLead === 'ghostspay' || fromLead === 'sunize' || (fromLead === 'paradise' || fromLead === 'clownpay' || fromLead === 'pingupag' || fromLead === 'lumeapag' || fromLead === 'atlaspags' || fromLead === 'flevopay' || fromLead === 'elevypay') || fromLead === 'atomopay') {
         return fromLead;
     }
     const requestedRaw = String(body.gateway || body.paymentGateway || body.provider || '').trim();
@@ -1077,6 +1089,42 @@ module.exports = async (req, res) => {
         paymentCode = parsed.paymentCode;
         paymentCodeBase64 = parsed.paymentCodeBase64;
         paymentQrUrl = parsed.paymentQrUrl;
+    } else if (gateway === 'elevypay') {
+        ({ response, data } = await requestElevypayStatus(statusGatewayConfig, txid));
+        if (!response?.ok) {
+            const status = Number(response?.status || 0);
+            res.status(status === 404 ? 200 : 502).json({
+                ok: status === 404,
+                status: leadStatus.status || 'waiting_payment',
+                statusRaw: leadStatus.statusRaw || '',
+                txid,
+                gateway,
+                source: 'database_fallback',
+                detail: data?.message || data?.error || ''
+            });
+            return;
+        }
+
+        const item = data?.data && typeof data.data === 'object' ? data.data : data;
+        statusRaw = getElevypayStatus(item) || String(item?.status || item?.payment_status || '').trim();
+        const mapped = mapElevypayStatusToUtmify(statusRaw);
+        nextStatus = isElevypayPaidStatus(statusRaw)
+            ? 'paid'
+            : isElevypayRefundedStatus(statusRaw)
+                ? 'refunded'
+                : isElevypayRefusedStatus(statusRaw)
+                    ? 'refused'
+                    : mapUtmifyStatusToFrontend(mapped);
+        changedAtIso =
+            toIsoDate(item?.paid_at) ||
+            toIsoDate(item?.paidAt) ||
+            toIsoDate(item?.updated_at) ||
+            toIsoDate(item?.created_at) ||
+            new Date().toISOString();
+        const parsed = resolveElevypayCreateResponse(data);
+        paymentCode = parsed.paymentCode;
+        paymentCodeBase64 = parsed.paymentCodeBase64;
+        paymentQrUrl = parsed.paymentQrUrl;
     } else if (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag') {
         ({ response, data } = await requestParadiseStatus(statusGatewayConfig, txid));
         if (!response?.ok) {
@@ -1281,7 +1329,9 @@ module.exports = async (req, res) => {
                 ? mapAtlaspagsStatusToUtmify(statusRaw)
                 : gateway === 'flevopay'
                     ? mapFlevopayStatusToUtmify(statusRaw)
-                    : (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag')
+                    : gateway === 'elevypay'
+                        ? mapElevypayStatusToUtmify(statusRaw)
+                        : (gateway === 'paradise' || gateway === 'clownpay' || gateway === 'pingupag')
                     ? mapParadiseStatusToUtmify(statusRaw)
                 : gateway === 'atomopay'
                     ? mapAtomopayStatusToUtmify(statusRaw)
@@ -1330,6 +1380,12 @@ module.exports = async (req, res) => {
                 0
             );
         } else if (gateway === 'flevopay') {
+            gatewayFee = normalizeMoneyToBrl(
+                data?.fee ||
+                data?.data?.fee ||
+                0
+            );
+        } else if (gateway === 'elevypay') {
             gatewayFee = normalizeMoneyToBrl(
                 data?.fee ||
                 data?.data?.fee ||

@@ -163,6 +163,11 @@
               <em id="metric-gateway-flevopay-detail">0 pagos / 0 PIX</em>
             </div>
             <div class="admin-kpi">
+              <span>ElevyPay</span>
+              <strong id="metric-gateway-elevypay-conv">0%</strong>
+              <em id="metric-gateway-elevypay-detail">0 pagos / 0 PIX</em>
+            </div>
+            <div class="admin-kpi">
               <span>ClownPay</span>
               <strong id="metric-gateway-clownpay-conv">0%</strong>
               <em id="metric-gateway-clownpay-detail">0 pagos / 0 PIX</em>
@@ -304,6 +309,19 @@
                   <span class="gateway-order-state" data-gateway-order-state="flevopay">-</span>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir FlevoPay"></button>
                   <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer FlevoPay"></button>
+                </article>
+                <article class="gateway-order-item" data-gateway-order-item="elevypay" draggable="true">
+                  <span class="gateway-order-index">9</span>
+                  <span class="gateway-order-handle" aria-hidden="true"></span>
+                  <span class="gateway-order-name">ElevyPay</span>
+                  <span class="gateway-order-stats" data-gateway-order-stats="elevypay">
+                    <span class="gateway-order-stat"><strong data-gateway-order-generated="elevypay">0</strong><em>Gerados hoje</em></span>
+                    <span class="gateway-order-stat"><strong data-gateway-order-paid="elevypay">0</strong><em>Aprovados hoje</em></span>
+                    <span class="gateway-order-stat gateway-order-stat--conversion"><strong data-gateway-order-conversion="elevypay">0%</strong><em>Conversao hoje</em><i><b data-gateway-order-conversion-bar="elevypay"></b></i></span>
+                  </span>
+                  <span class="gateway-order-state" data-gateway-order-state="elevypay">-</span>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="up" aria-label="Subir ElevyPay"></button>
+                  <button class="gateway-order-move" type="button" data-gateway-order-move="down" aria-label="Descer ElevyPay"></button>
                 </article>
                 <article class="gateway-order-item" data-gateway-order-item="atomopay" draggable="true">
                   <span class="gateway-order-index">4</span>
@@ -622,6 +640,54 @@
                 </div>
               </div>
             </article>
+            <article class="gateway-card" data-gateway-card="elevypay">
+              <header class="gateway-card-header">
+                <div class="gateway-card-heading">
+                  <h3>ElevyPay</h3>
+                  <p>Gateway PIX ElevyPay com webhook nativo e tracking completo.</p>
+                </div>
+                <div class="gateway-card-actions">
+                  <label class="gateway-switch" for="gateway-elevypay-enabled">
+                    <input type="checkbox" id="gateway-elevypay-enabled" />
+                    <span class="gateway-switch-track" aria-hidden="true"></span>
+                    <span class="gateway-switch-text" id="gateway-elevypay-state">Carregando</span>
+                  </label>
+                  <button type="button" class="btn-secondary gateway-config-toggle" data-gateway-config-toggle="elevypay" aria-controls="gateway-config-elevypay" aria-expanded="false">Configurar</button>
+                </div>
+              </header>
+              <div id="gateway-config-elevypay" class="gateway-card-body">
+                <div class="admin-grid gateway-fields-grid">
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-base-url" class="floating-input" placeholder=" " value="https://app.elevypay.com" />
+                    <label for="gateway-elevypay-base-url" class="floating-label">ElevyPay Base URL</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-account-id" class="floating-input" placeholder=" " value="68" />
+                    <label for="gateway-elevypay-account-id" class="floating-label">ID da Conta</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="password" id="gateway-elevypay-api-key" class="floating-input" placeholder=" " autocomplete="new-password" value="elevy_sk_c30a09229b266cd385327af6626aa5c6528a59fc81d6c022d701ba5768118cb4" />
+                    <label for="gateway-elevypay-api-key" class="floating-label">ElevyPay Secret Key</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-product-hash" class="floating-input" placeholder=" " />
+                    <label for="gateway-elevypay-product-hash" class="floating-label">Product Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-orderbump-hash" class="floating-input" placeholder=" " />
+                    <label for="gateway-elevypay-orderbump-hash" class="floating-label">Orderbump Hash (opcional)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-source" class="floating-input" placeholder=" " value="api_externa" />
+                    <label for="gateway-elevypay-source" class="floating-label">Origem (Source, padrao api_externa)</label>
+                  </div>
+                  <div class="input-group">
+                    <input type="text" id="gateway-elevypay-description" class="floating-input" placeholder=" " value="Bag" />
+                    <label for="gateway-elevypay-description" class="floating-label">Descricao padrao do pedido (opcional)</label>
+                  </div>
+                </div>
+              </div>
+            </article>
             <article class="gateway-card" data-gateway-card="clownpay">
               <header class="gateway-card-header">
                 <div class="gateway-card-heading">
@@ -828,6 +894,10 @@
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-flevopay" />
               <span>FlevoPay</span>
+            </label>
+            <label class="gateway-test-option">
+              <input type="checkbox" id="gateway-test-elevypay" />
+              <span>ElevyPay</span>
             </label>
             <label class="gateway-test-option">
               <input type="checkbox" id="gateway-test-clownpay" />
